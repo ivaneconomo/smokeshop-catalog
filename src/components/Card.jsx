@@ -19,7 +19,7 @@ export const Card = ({ item, onPreview }) => {
           <img
             src={imgSrc}
             alt={`${item.brand} ${item.model}`}
-            className='object-contain w-full md:h-60 rounded pointer-events-none'
+            className='object-contain w-full h-60 rounded pointer-events-none'
             loading='lazy'
           />
         </button>
@@ -30,7 +30,7 @@ export const Card = ({ item, onPreview }) => {
         )}
       </div>
 
-      <div className='p-4'>
+      <div className='p-2'>
         <h2 className='text-gray-950 font-semibold'>
           {item.brand}{' '}
           <span className='text-gray-500 font-light text-sm'>{item.model}</span>
