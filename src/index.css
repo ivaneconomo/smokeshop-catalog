@@ -1,3 +1,38 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+:root {
+  color-scheme: light dark;
+}
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  font-family: 'Anton', Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial,
+    sans-serif;
+  background: #ffffff;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(224, 224, 255, 1) 100%
+  );
+  color: #18181b; /* zinc-900 */
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+}
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #1f2d69;
+    background: radial-gradient(
+      circle,
+      rgba(31, 45, 105, 1) 0%,
+      rgba(10, 10, 51, 1) 100%
+    );
+    background-repeat: no-repeat;
+    background-size: cover;
+    color: #fafafa; /* zinc-50 */
+    background-attachment: fixed;
+  }
+}
