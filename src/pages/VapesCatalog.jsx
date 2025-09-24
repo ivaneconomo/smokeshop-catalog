@@ -67,10 +67,10 @@ export default function VapesCatalog() {
                 loading='eager'
               />
               {openItem.sale && (
-                <SaleStamp className='max-w-28 max-h-28 md:w-36 md:h-36 top-0 right-8 md:right-6' />
+                <SaleStamp className='max-w-28 max-h-28 md:max-w-40 md:max-h-40 top-6 right-8 md:right-6' />
               )}
               {openItem.featured && (
-                <BestSellerStamp className='max-w-28 max-h-28 md:w-36 md:h-36 top-0 right-8 md:right-6' />
+                <BestSellerStamp className='max-w-28 max-h-28 md:max-w-40 md:max-h-40 top-6 right-8 md:right-6' />
               )}
               <button
                 ref={closeBtnRef}
