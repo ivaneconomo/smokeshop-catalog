@@ -3,7 +3,7 @@ export const SaleStamp = ({ className }) => {
     <img
       src='/images/sale_stamp.png'
       alt='Sale'
-      className={`pointer-events-none absolute object-contain rotate-45 ${className}`}
+      className={`pointer-events-none absolute object-contain rotate-[40deg] ${className}`}
     />
   );
 };

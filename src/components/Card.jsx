@@ -6,7 +6,7 @@ export const Card = ({ item, onPreview }) => {
   const label = `Ver grande ${item.brand} ${item.model || ''}`.trim();
 
   return (
-    <div className='bg-white rounded shadow hover:shadow-md transition-shadow duration-300 flex flex-col relative max-w-60'>
+    <div className='bg-white rounded shadow hover:shadow-md transition-shadow duration-300 flex flex-col relative w-full'>
       <div className='relative'>
         {/* Botón accesible que abre el modal */}
         <button
@@ -19,7 +19,7 @@ export const Card = ({ item, onPreview }) => {
           <img
             src={imgSrc}
             alt={`${item.brand} ${item.model}`}
-            className='w-full h-52 md:h-60 object-contain rounded pointer-events-none'
+            className='object-contain w-full md:h-60 rounded pointer-events-none'
             loading='lazy'
           />
         </button>
