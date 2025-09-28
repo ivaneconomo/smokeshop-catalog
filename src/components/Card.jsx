@@ -12,14 +12,14 @@ export const Card = ({ item, onPreview }) => {
         <button
           type='button'
           onClick={() => onPreview?.(item)}
-          className='block w-full cursor-zoom-in focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-900 rounded'
+          className='block w-full h-60 cursor-zoom-in focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-900 rounded'
           aria-label={label}
           title={label}
         >
           <img
             src={imgSrc}
             alt={`${item.brand} ${item.model}`}
-            className='object-contain w-full h-60 rounded pointer-events-none'
+            className='object-contain w-full rounded pointer-events-none'
             loading='lazy'
           />
         </button>
