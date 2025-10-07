@@ -1,5 +1,6 @@
 import { SaleStamp } from './SaleStamp';
 import { BestSellerStamp } from './BestSellerStamp';
+import Badge from './Badge';
 
 const ProductModal = ({ openItem, setOpenItem, closeBtnRef }) => {
   return (
@@ -9,7 +10,7 @@ const ProductModal = ({ openItem, setOpenItem, closeBtnRef }) => {
       aria-hidden='true'
     >
       <div
-        className='relative max-w-4xl w-full flex justify-center'
+        className='relative max-w-4xl flex justify-center bg-white backdrop-blur-md p-4 rounded-xl shadow-lg'
         role='dialog'
         aria-modal='true'
         aria-label={`${openItem.brand} ${openItem.model}`}
@@ -19,13 +20,13 @@ const ProductModal = ({ openItem, setOpenItem, closeBtnRef }) => {
           <img
             src={openItem.image || openItem.img || openItem.src}
             alt={`${openItem.brand} ${openItem.model}`}
-            className='w-full max-w-md max-h-[80vh] rounded-xl shadow-2xl mx-auto'
+            className='w-full max-w-md max-h-[80vh] rounded-xl mx-auto'
             loading='eager'
           />
-          {openItem.sale && (
+          {openItem.on_sale && (
             <SaleStamp className='max-w-28 max-h-28 md:max-w-40 md:max-h-40 top-6 right-8 md:right-6' />
           )}
-          {openItem.featured && (
+          {openItem.on_featured && (
             <BestSellerStamp className='max-w-28 max-h-28 md:max-w-40 md:max-h-40 top-6 right-8 md:right-6' />
           )}
           <button
@@ -35,13 +36,23 @@ const ProductModal = ({ openItem, setOpenItem, closeBtnRef }) => {
           >
             ❌
           </button>
-          <div className='mt-3 text-center text-white'>
-            <div className='text-lg font-semibold'>
+          <div className='mt-3 text-center'>
+            <div className='text-lg font-semibold flex justify-center gap-2 items-center dark:text-gray-900'>
               {openItem.brand} {openItem.model}
+              {openItem.puffs ? (
+                <div className='text-gray-700/80 font-normal dark:text-gray-400'>
+                  {openItem.puffs} puffs
+                </div>
+              ) : null}
             </div>
-            {openItem.puffs ? (
-              <div className='text-white/80'>{openItem.puffs} puffs</div>
-            ) : null}
+
+            <div className='mt-2 grid grid-cols-3 gap-1 justify-center'>
+              {openItem.flavors?.map((f, i) => (
+                <Badge key={i} color={f.color}>
+                  {f.name}
+                </Badge>
+              ))}
+            </div>
           </div>
         </div>
       </div>

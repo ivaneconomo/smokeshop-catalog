@@ -24,8 +24,8 @@ export const Card = ({ item, onPreview }) => {
           />
         </button>
 
-        {item.sale && <SaleStamp className='w-24 h-24 top-0 right-4' />}
-        {item.featured && (
+        {item.on_sale && <SaleStamp className='w-24 h-24 top-0 right-4' />}
+        {item.on_featured && (
           <BestSellerStamp className='w-24 h-24 top-0 right-4' />
         )}
       </div>
