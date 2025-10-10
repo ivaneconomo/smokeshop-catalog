@@ -14,11 +14,12 @@ export default function ColorBadge({
 }) {
   const c = COLOR_MAP[color] ?? COLOR_MAP.neutral; // fallback
 
-  const base = 'text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm border';
+  const base =
+    'text-[10px] text-center border p-[0.5px] rounded-md flex items-center justify-center';
 
   return (
     <span
-      className={`${c.bg} ${c.text} ${base} ${c.border} ${className}`}
+      className={`${c.light} ${c.dark} ${base} ${className}`}
       role='status'
       aria-label={`badge-${color}`}
     >

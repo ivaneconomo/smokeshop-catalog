@@ -3,36 +3,58 @@
 :root {
   color-scheme: light dark;
 }
+
 html,
 body,
 #root {
   height: 100%;
 }
+
 body {
   font-family: 'Anton', Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial,
     sans-serif;
   background: #ffffff;
-  background: radial-gradient(
-    circle,
-    rgba(255, 255, 255, 1) 0%,
-    rgba(224, 224, 255, 1) 100%
-  );
-  color: #18181b; /* zinc-900 */
+  background: radial-gradient(circle,
+      rgba(255, 255, 255, 1) 0%,
+      rgba(224, 224, 255, 1) 100%);
+  color: #18181b;
+  /* zinc-900 */
   background-repeat: no-repeat;
   background-size: cover;
   background-attachment: fixed;
 }
+
 @media (prefers-color-scheme: dark) {
   body {
     background: #1f2d69;
-    background: radial-gradient(
-      circle,
-      rgba(31, 45, 105, 1) 0%,
-      rgba(10, 10, 51, 1) 100%
-    );
+    background: radial-gradient(circle,
+        rgba(31, 45, 105, 1) 0%,
+        rgba(10, 10, 51, 1) 100%);
     background-repeat: no-repeat;
     background-size: cover;
-    color: #fafafa; /* zinc-50 */
+    color: #fafafa;
+    /* zinc-50 */
     background-attachment: fixed;
   }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.25s ease-out;
+}
+
+body::-webkit-scrollbar {
+  display: none;
+  /* Oculta la barra visualmente */
 }

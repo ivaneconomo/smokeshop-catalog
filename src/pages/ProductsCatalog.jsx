@@ -1,39 +1,29 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import Card from '../components/Card';
 import ProductModal from '../components/ProductModal';
-import { getProducts } from '../services/api'; // 👈 axios
 import { LoaderSpinner } from '../components/LoaderSpinner';
+import useStoreProducts from '../hooks/useStoreProducts';
+import RefreshButton from '../components/RefreshButton';
 
 export default function ProductsCatalog() {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState(null);
-
   const [openItem, setOpenItem] = useState(null);
   const closeBtnRef = useRef(null);
 
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        setLoading(true);
-        setErr(null);
-        const data = await getProducts(); // 👈 trae todo
-        if (!mounted) return;
-        // orden simple por client_id (tu seed lo tiene)
-        setItems([...data].sort((a, b) => (a.puffs > b.puffs ? 1 : -1)));
-      } catch (e) {
-        if (!mounted) return;
-        setErr(e?.message || 'Error al cargar productos');
-      } finally {
-        mounted && setLoading(false);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  const { search } = useLocation();
+  const qs = useMemo(() => new URLSearchParams(search), [search]);
 
+  const kind = qs.get('kind');
+  const store = qs.get('store') || localStorage.getItem('activeStore'); // viene de SelectStore
+
+  const { items, loading, error, fromCache } = useStoreProducts({
+    storeId: store,
+    kind,
+    version: 'v1',
+    ttlMs: 12 * 60 * 60 * 1000, // 12h
+  });
+
+  // Modal ESC + scroll lock
   useEffect(() => {
     if (!openItem) return;
     const onKey = (e) => e.key === 'Escape' && setOpenItem(null);
@@ -47,27 +37,55 @@ export default function ProductsCatalog() {
     };
   }, [openItem]);
 
+  // ──────────────────────────────────────────────────────────────
+  // Regla EXACTA:
+  // visible ⇢ item.available === true
+  //        && item.flavors is array with length > 0
+  //        && some(flavor.available_location[store]?.available === true)
+  // ──────────────────────────────────────────────────────────────
+  const hasFlavorAvailableInStore = (item, storeId) => {
+    if (!Array.isArray(item.flavors) || item.flavors.length === 0) return false;
+    if (!storeId) return false; // sin tienda activa no mostramos
+    return item.flavors.some(
+      (f) => f?.available_location?.[storeId]?.available === true
+    );
+  };
+
+  const visibleItems = items.filter(
+    (x) => x?.available === true && hasFlavorAvailableInStore(x, store)
+  );
+
   return (
-    <section className='mx-auto max-w-7xl px-4 py-6 flex flex-col items-center'>
-      <h1 className='mb-6 text-2xl font-bold text-center'>Catálogo · Vapes</h1>
+    <section className='mx-auto max-w-screen-md pt-4 pb-8 flex flex-col items-center'>
+      <div className='w-full mb-3 text-sm text-slate-500'>
+        <span>Tienda activa: </span>
+        <strong>{store || '—'}</strong>
+        {fromCache && <span className='ml-2'>• (desde caché)</span>}
+        <RefreshButton kind={kind} storeId={store} />
+      </div>
 
       {loading && <LoaderSpinner />}
-      {err && !loading && (
-        <p className='text-red-600 my-8'>🥲 Hubo un problema: {err}</p>
-      )}
+      {error && !loading && <p className='text-red-600 my-8'>🥲 {error}</p>}
 
-      {!loading && !err && (
-        <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 justify-items-center w-full'>
-          {items
-            .filter((x) => x.available) // si querés solo disponibles
-            .map((item) => (
-              <Card
-                key={item._id || item.client_id} // 👈 key estable
-                item={item}
-                onPreview={() => setOpenItem(item)}
-              />
-            ))}
-        </div>
+      {!loading && !error && (
+        <>
+          {visibleItems.length === 0 ? (
+            <p className='text-slate-500 my-8'>
+              No hay productos para mostrar.
+            </p>
+          ) : (
+            <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 justify-items-center w-full'>
+              {visibleItems.map((item) => (
+                <Card
+                  key={item._id || item.client_id}
+                  item={item}
+                  onPreview={() => setOpenItem(item)}
+                  activeStore={store}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {openItem && (
@@ -75,6 +93,7 @@ export default function ProductsCatalog() {
           openItem={openItem}
           setOpenItem={setOpenItem}
           closeBtnRef={closeBtnRef}
+          activeStore={store}
         />
       )}
     </section>
