@@ -62,6 +62,7 @@ export default function SelectStore() {
                   object-contain rounded-xl
                 '
                 draggable={false}
+                loading='eager'
               />
 
               {store === s.id ? (
