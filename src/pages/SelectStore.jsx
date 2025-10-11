@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const STORES = [
-  { id: 'store_6', label: 'Tienda 6', img: '/images/logo_kings.png' },
-  { id: 'store_22', label: 'Tienda 22', img: '/images/logo_souvenir.png' },
-  { id: 'store_28', label: 'Tienda 28', img: '/images/logo_exotic.png' },
+  { id: 'store_6', label: 'Tienda 6', img: '/images/logo_kings.svg' },
+  { id: 'store_22', label: 'Tienda 22', img: '/images/logo_souvenir.svg' },
+  { id: 'store_28', label: 'Tienda 28', img: '/images/logo_exotic.svg' },
 ];
 
 export default function SelectStore() {
