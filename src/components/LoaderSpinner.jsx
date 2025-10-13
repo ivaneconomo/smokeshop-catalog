@@ -1,10 +1,7 @@
 export const LoaderSpinner = () => {
   return (
     <div>
-      <div
-        className='p-6 h-screen flex items-center justify-center'
-        role='status'
-      >
+      <div className='min-h-dvh flex items-center justify-center' role='status'>
         <svg
           aria-hidden='true'
           className='inline w-14 h-14 text-gray-200 animate-spin dark:text-gray-600 fill-gray-600 dark:fill-gray-300'

@@ -6,7 +6,7 @@ import { Footer } from './components/Footer';
 
 export default function App() {
   return (
-    <main className='max-w-screen-md mx-auto p-4'>
+    <main className='max-w-screen-md mx-auto px-4'>
       <Navbar />
       <Routes>
         <Route path='/' element={<SelectStore />} />

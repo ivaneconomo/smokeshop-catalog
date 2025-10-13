@@ -81,7 +81,7 @@ const ProductModal = ({
               {openItem.brand} {openItem.model}
             </p>
             {openItem.puffs ? (
-              <span className='text-slate-500 dark:text-slate-300'>
+              <span className='text-slate-600 dark:text-slate-200 text-xl'>
                 {openItem.puffs} puffs
               </span>
             ) : null}
@@ -89,10 +89,8 @@ const ProductModal = ({
 
           {/* Badges */}
           {visibleFlavors.length > 0 && (
-            <section className='mt-4 space-y-2'>
-              <p className='text-sm sm:text-base opacity-90'>
-                Available Flavors
-              </p>
+            <section className='mt-6 space-y-2'>
+              <p>Available Flavors</p>
               <div
                 className='
                   grid grid-cols-2 sm:grid-cols-2 gap-1.5
@@ -119,7 +117,7 @@ const ProductModal = ({
             rounded-full
             bg-slate-200 dark:bg-slate-800
             border border-slate-300/60 dark:border-slate-900/40
-            p-2
+            p-3
             hover:text-white hover:bg-red-500
             transition-colors
           '

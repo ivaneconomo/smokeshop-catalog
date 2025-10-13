@@ -26,7 +26,7 @@ export default function SelectStore() {
   };
 
   return (
-    <section className='min-h-dvh flex flex-col gap-8 py-8 md:px-8 justify-center items-center md:gap-16'>
+    <section className='min-h-dvh flex flex-col gap-8 pt-8 md:px-8 justify-center items-center md:gap-16'>
       <div className='text-center'>
         <h1 className='text-3xl sm:text-5xl font-bold'>SmokeShop · Catálogo</h1>
         <h2 className='text-lg sm:text-xl text-white/90'>
@@ -37,6 +37,7 @@ export default function SelectStore() {
       <div className='flex flex-col items-center text-center gap-4 md:flex-row'>
         {STORES.map((s) => (
           <div
+            key={s.id} // 👈 esto evita el warning
             onClick={() => setStore(s.id)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
@@ -47,19 +48,17 @@ export default function SelectStore() {
             role='button'
             tabIndex={0}
             className={`cursor-pointer select-none touch-manipulation transition-transform duration-200
-                ${
-                  store === s.id
-                    ? 'scale-105 drop-shadow-[0_0_35px_rgba(251,191,36,0.4)]'
-                    : 'opacity-90 hover:opacity-100 grayscale-75 hover:grayscale-0'
-                }
-              `}
+        ${
+          store === s.id
+            ? 'scale-105 drop-shadow-[0_0_35px_rgba(251,191,36,0.4)]'
+            : 'opacity-90 hover:opacity-100 grayscale-75 hover:grayscale-0'
+        }
+      `}
           >
             <img
               src={s.img}
               alt={s.label}
-              className='
-                  max-w-38 md:max-w-60
-                '
+              className='max-w-38 md:max-w-60'
               draggable={false}
               loading='eager'
             />

@@ -15,7 +15,7 @@ export default function ColorBadge({
   const c = COLOR_MAP[color] ?? COLOR_MAP.neutral; // fallback
 
   const base =
-    'text-xs text-center border p-[0.5px] rounded-md flex items-center justify-center';
+    'text-sm text-center border p-[0.5px] rounded-md flex items-center justify-center';
 
   return (
     <span

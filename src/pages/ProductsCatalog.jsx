@@ -56,7 +56,7 @@ export default function ProductsCatalog() {
   );
 
   return (
-    <section className=''>
+    <section className='pb-4'>
       <div className=' text-slate-500 mt-8 mb-2'>
         <span>Tienda activa: </span>
         <strong className='text-emerald-500'>{store || '—'}</strong>
