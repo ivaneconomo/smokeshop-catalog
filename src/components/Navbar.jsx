@@ -8,14 +8,14 @@ export default function Navbar() {
 
   const links = [
     { name: 'Tiendas', to: '/' },
-    { name: 'Nicotine', to: '/products?kind=NicDisposable' },
+    /*{ name: 'Nicotine', to: '/products?kind=NicDisposable' },
     { name: 'HHC', to: '/products?kind=HHCDisposable' },
-    { name: 'Edibles', to: '/products?kind=Edible' },
+    { name: 'Edibles', to: '/products?kind=Edible' }, */
   ];
 
   return (
     <nav className='w-full'>
-      <div className='max-w-screen-md mx-auto py-3 flex flex-wrap justify-center gap-4 sm:justify-between sm:items-center'>
+      <div className='py-4 flex flex-wrap justify-center gap-4 sm:justify-between sm:items-center'>
         <h1 className='text-xl font-bold text-slate-900 dark:text-slate-50'>
           SmokeShop · Catálogo
         </h1>
@@ -28,7 +28,7 @@ export default function Navbar() {
               <Link
                 key={link.name}
                 to={link.to}
-                className={`px-4 py-2 rounded-md font-medium text-sm transition-colors duration-150
+                className={`px-4 py-1 rounded-md font-medium text-sm transition-colors duration-150
                   ${
                     isActive
                       ? 'bg-slate-50 text-slate-900 shadow'

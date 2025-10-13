@@ -26,61 +26,59 @@ export default function SelectStore() {
   };
 
   return (
-    <section className='mx-auto px-4 sm:px-8 lg:px-10 text-center min-h-[100svh] flex flex-col justify-center gap-12 sm:gap-16'>
-      <div className='flex flex-col gap-2'>
+    <section className='min-h-dvh flex flex-col gap-8 py-8 md:px-8 justify-center items-center md:gap-16'>
+      <div className='text-center'>
         <h1 className='text-3xl sm:text-5xl font-bold'>SmokeShop · Catálogo</h1>
-        <h2 className='text-lg sm:text-xl'>Selecciona una tienda</h2>
+        <h2 className='text-lg sm:text-xl text-white/90'>
+          Selecciona una tienda
+        </h2>
       </div>
 
-      <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 justify-items-center mx-auto max-w-4xl'>
+      <div className='flex flex-col items-center text-center gap-4 md:flex-row'>
         {STORES.map((s) => (
-          <div key={s.id} className='relative flex flex-col items-center'>
-            <div
-              onClick={() => setStore(s.id)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  setStore(s.id);
-                }
-              }}
-              role='button'
-              tabIndex={0}
-              className={`cursor-pointer select-none touch-manipulation transition-transform duration-200
+          <div
+            onClick={() => setStore(s.id)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setStore(s.id);
+              }
+            }}
+            role='button'
+            tabIndex={0}
+            className={`cursor-pointer select-none touch-manipulation transition-transform duration-200
                 ${
                   store === s.id
                     ? 'scale-105 drop-shadow-[0_0_35px_rgba(251,191,36,0.4)]'
                     : 'opacity-90 hover:opacity-100 grayscale-75 hover:grayscale-0'
                 }
               `}
-            >
-              <img
-                src={s.img}
-                alt={s.label}
-                className='
-                  w-56 max-w-full sm:w-64 md:w-72
-                  max-h-56 sm:max-h-64 md:max-h-72
-                  object-contain rounded-xl
+          >
+            <img
+              src={s.img}
+              alt={s.label}
+              className='
+                  max-w-38 md:max-w-60
                 '
-                draggable={false}
-                loading='eager'
-              />
+              draggable={false}
+              loading='eager'
+            />
 
-              {store === s.id ? (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    confirmSelection(s.id);
-                  }}
-                  className='bg-emerald-500 text-white text-sm sm:text-base py-1.5 px-4 rounded-full shadow-md mt-3 hover:bg-emerald-600 transition-colors duration-150 font-medium animate-fadeIn'
-                >
-                  Confirmar
-                </button>
-              ) : (
-                <p className='py-2 text-base sm:text-lg font-medium'>
-                  {s.label}
-                </p>
-              )}
-            </div>
+            {store === s.id ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  confirmSelection(s.id);
+                }}
+                className='bg-emerald-500 text-white text-sm sm:text-base py-1.5 px-4 rounded-full shadow-md mt-2 md:mt-4 hover:bg-emerald-600 transition-colors duration-150 font-medium animate-fadeIn'
+              >
+                Confirmar
+              </button>
+            ) : (
+              <p className='py-1.5 px-4 mt-2 md:mt-4 text-base sm:text-lg font-medium'>
+                {s.label}
+              </p>
+            )}
           </div>
         ))}
       </div>

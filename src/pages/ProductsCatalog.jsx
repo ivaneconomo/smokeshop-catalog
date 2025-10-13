@@ -56,10 +56,10 @@ export default function ProductsCatalog() {
   );
 
   return (
-    <section className='mx-auto max-w-screen-md pt-4 pb-8 flex flex-col items-center'>
-      <div className='w-full mb-3 text-sm text-slate-500'>
+    <section className=''>
+      <div className=' text-slate-500 mt-8 mb-2'>
         <span>Tienda activa: </span>
-        <strong>{store || '—'}</strong>
+        <strong className='text-emerald-500'>{store || '—'}</strong>
         {fromCache && <span className='ml-2'>• (desde caché)</span>}
         <RefreshButton kind={kind} storeId={store} />
       </div>

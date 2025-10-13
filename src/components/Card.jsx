@@ -42,10 +42,10 @@ export const Card = ({ item, onPreview, className = '', priority = true }) => {
 
         {/* Sellos responsivos */}
         {item.on_sale && (
-          <SaleStamp className='left-0 top-0 max-w-48 sm:max-w-32 md:max-w-40' />
+          <SaleStamp className='left-0 top-0 max-w-48 sm:max-w-32 md:max-w-36' />
         )}
         {item.on_featured && (
-          <BestSellerStamp className='left-0 top-0 max-w-48 sm:max-w-32 md:max-w-40' />
+          <BestSellerStamp className='left-0 top-0 max-w-48 sm:max-w-32 md:max-w-36' />
         )}
       </div>
 
