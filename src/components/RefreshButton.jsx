@@ -1,18 +1,17 @@
-// Ejemplo de botón (puedes colocarlo en ProductsCatalog)
-import { cacheKeyForProducts } from '../utils/cache';
+import LoadingButton from './LoadingButton';
 
-function RefreshButton({ storeId, kind, version = 'v1' }) {
-  const onRefresh = () => {
-    const key = cacheKeyForProducts(storeId, version, kind || '__all__');
-    localStorage.removeItem(key);
-    // Vuelve a renderizar/recargar
-    window.location.reload();
-  };
-
+export default function RefreshButton({
+  onRefresh,
+  isRefreshing,
+  variant = 'outline',
+}) {
   return (
-    <button className='px-3 py-1 text-md' onClick={onRefresh}>
-      <span className='material-symbols-outlined'>🔄️</span>
-    </button>
+    <LoadingButton
+      variant={variant}
+      loading={isRefreshing} // controlado
+      onClick={onRefresh}
+    >
+      Actualizar
+    </LoadingButton>
   );
 }
-export default RefreshButton;

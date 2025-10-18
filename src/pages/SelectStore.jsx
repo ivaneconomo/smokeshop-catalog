@@ -27,9 +27,9 @@ export default function SelectStore() {
 
   return (
     <section className='min-h-dvh flex flex-col gap-8 pt-8 md:px-8 justify-center items-center md:gap-16'>
-      <div className='text-center'>
+      <div className='text-center space-y-4'>
         <h1 className='text-3xl sm:text-5xl font-bold'>SmokeShop · Catálogo</h1>
-        <h2 className='text-lg sm:text-xl text-white/90'>
+        <h2 className='text-lg sm:text-xl dark:text-slate-50/70 text-slate-900/70'>
           Selecciona una tienda
         </h2>
       </div>

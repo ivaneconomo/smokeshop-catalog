@@ -1,3 +1,4 @@
+// src/pages/ProductsCatalog.jsx
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import Card from '../components/Card';
@@ -16,12 +17,13 @@ export default function ProductsCatalog() {
   const kind = qs.get('kind');
   const store = qs.get('store') || localStorage.getItem('activeStore'); // viene de SelectStore
 
-  const { items, loading, error, fromCache } = useStoreProducts({
-    storeId: store,
-    kind,
-    version: 'v1',
-    ttlMs: 12 * 60 * 60 * 1000, // 12h
-  });
+  const { items, loading, error, fromCache, isRefreshing, refresh } =
+    useStoreProducts({
+      storeId: store,
+      kind,
+      version: 'v1',
+      ttlMs: 12 * 60 * 60 * 1000, // 12h
+    });
 
   // Modal ESC + scroll lock
   useEffect(() => {
@@ -37,12 +39,10 @@ export default function ProductsCatalog() {
     };
   }, [openItem]);
 
-  // ──────────────────────────────────────────────────────────────
   // Regla EXACTA:
   // visible ⇢ item.available === true
   //        && item.flavors is array with length > 0
   //        && some(flavor.available_location[store]?.available === true)
-  // ──────────────────────────────────────────────────────────────
   const hasFlavorAvailableInStore = (item, storeId) => {
     if (!Array.isArray(item.flavors) || item.flavors.length === 0) return false;
     if (!storeId) return false; // sin tienda activa no mostramos
@@ -55,19 +55,32 @@ export default function ProductsCatalog() {
     (x) => x?.available === true && hasFlavorAvailableInStore(x, store)
   );
 
+  // Spinner bloqueante solo si no hay nada aún (primera carga sin caché)
+  const showBlockingSpinner = loading && visibleItems.length === 0;
+
   return (
     <section className='pb-4'>
-      <div className=' text-slate-500 mt-8 mb-2'>
-        <span>Tienda activa: </span>
-        <strong className='text-emerald-500'>{store || '—'}</strong>
-        {fromCache && <span className='ml-2'>• (desde caché)</span>}
-        <RefreshButton kind={kind} storeId={store} />
+      <div className='text-slate-500 mt-8 mb-2 flex items-center justify-between'>
+        <div className='flex items-center gap-2'>
+          <span>Tienda activa: </span>
+          <strong className='text-emerald-500'>{store || '—'}</strong>
+          {fromCache && <span>desde caché</span>}
+        </div>
+
+        <RefreshButton
+          onRefresh={refresh}
+          isRefreshing={isRefreshing}
+          variant='primary' // o "outline" si quieres el estilo gris
+        />
       </div>
 
-      {loading && <LoaderSpinner />}
-      {error && !loading && <p className='text-red-600 my-8'>🥲 {error}</p>}
+      {showBlockingSpinner && <LoaderSpinner />}
 
-      {!loading && !error && (
+      {error && !showBlockingSpinner && (
+        <p className='text-red-600 my-8'>🥲 {error}</p>
+      )}
+
+      {!showBlockingSpinner && !error && (
         <>
           {visibleItems.length === 0 ? (
             <p className='text-slate-500 my-8'>
