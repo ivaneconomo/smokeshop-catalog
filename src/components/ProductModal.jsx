@@ -1,7 +1,7 @@
 import { SaleStamp } from './SaleStamp';
 import { BestSellerStamp } from './BestSellerStamp';
-import Badge from './Badge';
-import { getVisibleFlavors } from '../utils/products';
+import FlavorBadge from './FlavorBadge';
+import { getFlavorStatus } from '../utils/products';
 
 const ProductModal = ({
   openItem,
@@ -9,7 +9,7 @@ const ProductModal = ({
   closeBtnRef,
   activeStore = 'all',
 }) => {
-  const visibleFlavors = getVisibleFlavors(openItem, activeStore);
+  const flavors = getFlavorStatus(openItem, activeStore);
 
   return (
     <div
@@ -17,29 +17,30 @@ const ProductModal = ({
       onClick={() => setOpenItem(null)}
       aria-hidden='true'
     >
+      {/* Contenedor principal del modal */}
       <div
         className='
-          relative
-          w-[min(92vw,1100px)]
-          max-h-[min(92svh,900px)]
-          md:w-[min(88vw,1100px)]
-          md:max-h-[min(88svh,900px)]
-          lg:max-h-[min(86svh,920px)]
-          overflow-hidden
-          rounded-xl
-          bg-slate-200 dark:bg-slate-800
-          shadow-xl
-          animate-fadeIn
-          grid grid-cols-1 sm:grid-cols-6 gap-0 sm:gap-3
-          p-4
-        '
+    relative
+    w-[min(92vw,1100px)]
+    h-[90vh]
+    [@media(min-height:799px)]:h-[60vh]
+    [@media(min-height:799)]:w-[100vh]
+    max-h-[900px]
+    overflow-hidden
+    rounded-xl
+    bg-slate-200 dark:bg-slate-800
+    shadow-xl
+    animate-fadeIn
+    grid grid-cols-1 sm:grid-cols-6 gap-0 sm:gap-3
+    p-4
+  '
         role='dialog'
         aria-modal='true'
         aria-label={`${openItem.brand} ${openItem.model}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Imagen y Stamps */}
-        <div className='col-span-3 flex items-center justify-center p-4 sm:p-5 overflow-hidden'>
+        <div className='col-span-3 flex items-center justify-center h-full p-4 sm:p-5 overflow-hidden'>
           <img
             src={openItem.image || openItem.img || openItem.src}
             alt={`${openItem.brand} ${openItem.model}`}
@@ -47,10 +48,7 @@ const ProductModal = ({
               object-contain
               w-full
               max-w-[22rem]
-              max-h-[40svh]
-              sm:max-h-[44svh]
-              md:max-h-[50svh]
-              lg:max-h-[58svh]
+              max-h-[85%]
               mx-auto
             '
             loading='eager'
@@ -68,13 +66,15 @@ const ProductModal = ({
         {/* Detalles del producto */}
         <div
           className='
-          col-span-3
-          bg-slate-50 dark:bg-slate-700
-          text-slate-900 dark:text-white
-          rounded-xl
-          p-4 sm:p-5
-          overflow-y-auto
-        '
+            col-span-3
+            bg-slate-50 dark:bg-slate-700
+            text-slate-900 dark:text-white
+            rounded-xl
+            p-4 sm:p-5
+            overflow-y-auto
+            h-[95%]
+            self-center
+          '
         >
           <header className='space-y-1'>
             <p className='font-semibold text-2xl leading-tight'>
@@ -87,22 +87,39 @@ const ProductModal = ({
             ) : null}
           </header>
 
-          {/* Badges */}
-          {visibleFlavors.length > 0 && (
+          {/* Sabores */}
+          {flavors.length > 0 && (
             <section className='mt-6 space-y-2'>
-              <p>Available Flavors</p>
+              <p className='text-lg text-slate-700 dark:text-slate-200'>
+                Sabores
+              </p>
+
               <div
                 className='
-                  grid grid-cols-2 sm:grid-cols-2 gap-1.5
-                  max-h-[34svh] sm:max-h-[36svh] md:max-h-[40svh]
-                  overflow-auto pr-1
+                  grid grid-cols-1 sm:grid-cols-2 gap-1.5
+                  overflow-auto
+                  pr-1
+                  h-[calc(100%-2rem)]
                 '
               >
-                {visibleFlavors.map((f, i) => (
-                  <Badge key={i} color={f.color}>
-                    {f.name}
-                  </Badge>
-                ))}
+                {flavors
+                  .slice()
+                  .sort((a, b) =>
+                    a.isAvailable === b.isAvailable ? 0 : a.isAvailable ? -1 : 1
+                  )
+                  .map((f) => (
+                    <FlavorBadge
+                      key={f.name}
+                      name={f.name}
+                      color={f.color}
+                      isAvailable={f.isAvailable}
+                      title={
+                        f.isAvailable
+                          ? 'Disponible en esta tienda'
+                          : 'No disponible en esta tienda'
+                      }
+                    />
+                  ))}
               </div>
             </section>
           )}
