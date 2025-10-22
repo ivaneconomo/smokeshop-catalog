@@ -107,7 +107,7 @@ const ProductModal = ({
       {/* Contenedor principal del modal */}
       <div
         className='
-          
+          relative
           w-[min(92vw,1100px)]
           h-[90vh]
           [@media(min-height:799px)]:h-[60vh]
