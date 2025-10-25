@@ -185,7 +185,7 @@ export default function ProductsCatalog() {
     <section className='pb-4'>
       <div className='mt-4 mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
         {/* Buscador en vivo */}
-        <form class='max-w-md grow'>
+        <form class='grow'>
           <label
             for='default-search'
             class='mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white'
@@ -213,7 +213,7 @@ export default function ProductsCatalog() {
             <input
               type='search'
               id='default-search'
-              class='block w-full p-1 ps-10 text-sm text-gray-900 border border-gray-300 rounded-md bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
+              class='block w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-md bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
               placeholder='Buscar'
               required
               value={query}
@@ -251,7 +251,7 @@ export default function ProductsCatalog() {
               No hay productos para mostrar.
             </p>
           ) : (
-            <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 justify-items-center w-full min-h-screen'>
+            <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 justify-items-center w-full min-h-screen auto-rows-max'>
               {visibleItems.map((item) => (
                 <Card
                   key={item._id || item.client_id}
