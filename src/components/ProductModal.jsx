@@ -174,7 +174,7 @@ const ProductModal = ({
             overflow-y-auto
             h-[95%]
             self-center
-            relative
+            
           '
         >
           {/* Toggle edición */}
@@ -182,14 +182,14 @@ const ProductModal = ({
             type='button'
             onClick={() => storeEditable && setEditMode((v) => !v)}
             className={`fill-slate-900 dark:fill-slate-100
-              absolute right-2 bottom-2
+              absolute right-14 top-2
               inline-flex items-center justify-center
               rounded-full p-2 text-xs
-              hover:bg-slate-200 dark:hover:bg-slate-800 transition
+              hover:bg-slate-400 dark:hover:bg-slate-900 transition
               ${
                 editMode
-                  ? 'bg-slate-200 dark:bg-slate-800'
-                  : 'bg-slate-100 transition dark:bg-slate-800/50'
+                  ? 'bg-slate-400 dark:bg-slate-900'
+                  : 'bg-slate-300 transition dark:bg-slate-600'
               }
             `}
             title={
@@ -225,7 +225,7 @@ const ProductModal = ({
           <button
             ref={closeBtnRef}
             onClick={() => setOpenItem(null)}
-            className='absolute top-2 right-2 rounded-full bg-slate-100 dark:bg-slate-800/50 p-2 fill-slate-900 dark:fill-slate-100 hover:bg-slate-200 dark:hover:bg-slate-800 transition'
+            className='absolute top-2 right-2 rounded-full bg-slate-300 dark:bg-slate-600 p-2 fill-slate-900 dark:fill-slate-100 hover:bg-slate-400 dark:hover:bg-slate-900 transition'
           >
             <span className='sr-only'>Close</span>
             <svg

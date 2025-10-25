@@ -30,7 +30,7 @@ export default function LoadingButton({
   };
 
   const classes =
-    'inline-flex items-center rounded text-xs px-2 py-0.5 ' +
+    'inline-flex items-center rounded text-xs px-2 py-1 ' +
     'border border-gray-200 text-gray-900/70 bg-white ' +
     'hover:bg-gray-100 hover:text-blue-700 ' +
     'focus:outline-none focus:ring-1 focus:ring-blue-700 ' +

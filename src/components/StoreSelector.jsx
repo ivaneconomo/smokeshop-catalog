@@ -38,7 +38,7 @@ export default function StoreSelector({ stores = DEFAULT_STORES }) {
     <div className='w-full max-w-screen-md mb-4'>
       <label className='block text-sm text-slate-600 mb-1'>Tienda</label>
       <select
-        className='w-full rounded-lg border border-slate-300 px-3 py-2 text-sm'
+        className='w-full rounded-md border border-slate-300 px-3 py-2 text-sm'
         value={value}
         onChange={(e) => setValue(e.target.value)}
       >

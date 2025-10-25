@@ -11,7 +11,7 @@ export const Card = ({ item, onPreview, className = '', priority = true }) => {
   return (
     <div
       className={[
-        'group relative flex flex-col rounded-md border border-slate-200/60 bg-slate-50 shadow-sm transition-shadow duration-300',
+        'group relative flex flex-col h-fit rounded-md border border-slate-200/60 bg-slate-50 shadow-sm transition-shadow duration-300',
         'hover:shadow-md dark:border-slate-700/60 dark:bg-slate-800/60',
         // Ancho fluido por defecto; el grid/parent define columnas
         'w-full',

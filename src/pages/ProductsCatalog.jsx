@@ -7,6 +7,7 @@ import { LoaderSpinner } from '../components/LoaderSpinner';
 import useStoreProducts from '../hooks/useStoreProducts';
 import RefreshButton from '../components/RefreshButton';
 import { cacheKeyForProducts, saveCache } from '../utils/cache';
+import { normalize } from '../utils/search'; // asegúrate de tener esta utilidad
 
 const VERSION = 'v1';
 const TTL_MS = 12 * 60 * 60 * 1000; // 12h
@@ -63,14 +64,42 @@ export default function ProductsCatalog() {
     );
   };
 
-  // Render desde localItems (refleja cambios del modal)
-  const visibleItems = useMemo(
+  // ---------- BUSCADOR EN VIVO (sin sugerencias) ----------
+  const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(query), 180);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  const queryTokens = useMemo(() => {
+    const qn = normalize(debouncedQuery);
+    return qn ? qn.split(' ').filter(Boolean) : [];
+  }, [debouncedQuery]);
+
+  // Base: tus reglas actuales (producto disponible + al menos 1 flavor disponible en la tienda)
+  const baseVisible = useMemo(
     () =>
       localItems.filter(
         (x) => x?.available === true && hasFlavorAvailableInStore(x, store)
       ),
     [localItems, store]
   );
+
+  // Filtro por texto: si hay tokens, exige que el producto tenga algún flavor
+  // disponible en la tienda activa cuyo nombre incluya TODOS los tokens.
+  const visibleItems = useMemo(() => {
+    if (queryTokens.length === 0) return baseVisible;
+
+    return baseVisible.filter((p) =>
+      (p.flavors ?? []).some((f) => {
+        const available = !!f?.available_location?.[store]?.available;
+        if (!available) return false;
+        const nameNorm = normalize(f.name);
+        return queryTokens.every((t) => nameNorm.includes(t));
+      })
+    );
+  }, [baseVisible, queryTokens, store]);
 
   // Spinner bloqueante solo si no hay nada aún (primera carga sin caché)
   const showBlockingSpinner = loading && visibleItems.length === 0;
@@ -154,18 +183,59 @@ export default function ProductsCatalog() {
 
   return (
     <section className='pb-4'>
-      <div className='text-slate-500 mt-8 mb-2 flex items-center justify-between text-xs sm:text-base'>
-        <div className='flex items-center gap-2'>
-          <span>Tienda activa: </span>
-          <strong className='text-emerald-500'>{store || '—'}</strong>
-          {fromCache && <span>desde caché</span>}
-        </div>
+      <div className='mt-4 mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+        {/* Buscador en vivo */}
+        <form class='max-w-md grow'>
+          <label
+            for='default-search'
+            class='mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white'
+          >
+            Search
+          </label>
+          <div class='relative'>
+            <div class='absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none'>
+              <svg
+                class='w-4 h-4 text-gray-500 dark:text-gray-400'
+                aria-hidden='true'
+                xmlns='http://www.w3.org/2000/svg'
+                fill='none'
+                viewBox='0 0 20 20'
+              >
+                <path
+                  stroke='currentColor'
+                  stroke-linecap='round'
+                  stroke-linejoin='round'
+                  stroke-width='2'
+                  d='m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z'
+                />
+              </svg>
+            </div>
+            <input
+              type='search'
+              id='default-search'
+              class='block w-full p-1 ps-10 text-sm text-gray-900 border border-gray-300 rounded-md bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
+              placeholder='Buscar'
+              required
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              autoComplete='off'
+            />
+          </div>
+        </form>
 
-        <RefreshButton
-          onRefresh={refresh}
-          isRefreshing={isRefreshing}
-          variant='primary' // o "outline" si quieres el estilo gris
-        />
+        <div className='text-slate-500 flex items-center justify-between gap-2 text-xs sm:text-base'>
+          <div className='flex gap-2'>
+            <span>Tienda activa: </span>
+            <strong className='text-emerald-500'>{store || '—'}</strong>
+            {fromCache && <span>desde caché</span>}
+          </div>
+
+          <RefreshButton
+            onRefresh={refresh}
+            isRefreshing={isRefreshing}
+            variant='primary'
+          />
+        </div>
       </div>
 
       {showBlockingSpinner && <LoaderSpinner />}
@@ -181,7 +251,7 @@ export default function ProductsCatalog() {
               No hay productos para mostrar.
             </p>
           ) : (
-            <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 justify-items-center w-full'>
+            <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 justify-items-center w-full min-h-screen'>
               {visibleItems.map((item) => (
                 <Card
                   key={item._id || item.client_id}
