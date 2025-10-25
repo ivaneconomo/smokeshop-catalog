@@ -31,9 +31,7 @@ export default function FlavorBadge({
       role='status'
       onClick={disabled ? undefined : onClick}
     >
-      <span className='flex items-center justify-start gap-1 w-full'>
-        {children ?? name}
-      </span>
+      <span>{children ?? name}</span>
     </span>
   );
 }

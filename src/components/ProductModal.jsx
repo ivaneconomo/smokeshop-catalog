@@ -306,7 +306,7 @@ const ProductModal = ({
                           height='20'
                           width='20'
                           viewBox='0 -960 960 960'
-                          className='fill-emerald-500'
+                          className='fill-emerald-500 shrink-0'
                           aria-hidden='true'
                           focusable='false'
                         >
@@ -318,7 +318,7 @@ const ProductModal = ({
                           height='20'
                           width='20'
                           viewBox='0 -960 960 960'
-                          className='fill-rose-500'
+                          className='fill-rose-500 shrink-0'
                           aria-hidden='true'
                           focusable='false'
                         >
