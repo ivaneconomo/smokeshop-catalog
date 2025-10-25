@@ -1,34 +1,37 @@
+// components/ProductModal.jsx
 import { useEffect, useMemo, useState } from 'react';
 import { SaleStamp } from './SaleStamp';
 import { BestSellerStamp } from './BestSellerStamp';
 import FlavorBadge from './FlavorBadge';
 import { getFlavorStatus } from '../utils/products';
 import { patchFlavorAvailability } from '../services/api';
+import { toast } from 'react-hot-toast';
 
 const ProductModal = ({
   openItem,
   setOpenItem,
   closeBtnRef,
   activeStore = 'all',
-  onAvailabilityChange, // 👈 IMPORTANTE: viene del padre
+  onAvailabilityChange, // notifica al padre para lista + cache
 }) => {
-  // Estado local para edición optimista
+  // Estado local
   const [item, setItem] = useState(openItem);
   const [editMode, setEditMode] = useState(false);
-  const [busy, setBusy] = useState(false);
+
+  // Pendientes por sabor (Set de flavorIds en curso)
+  const [pending, setPending] = useState(() => new Set());
 
   const storeEditable = activeStore && activeStore !== 'all';
 
-  // Mantener item sincronizado con el prop más fresco
   useEffect(() => setItem(openItem), [openItem]);
 
-  // Lista de sabores para pintar (tu misma util)
+  // Lista de sabores pintables
   const flavors = useMemo(
     () => getFlavorStatus(item, activeStore),
     [item, activeStore]
   );
 
-  // name -> _id (para llamar API por id real)
+  // name -> _id (para API por id real)
   const flavorIdByName = useMemo(() => {
     const map = new Map();
     for (const f of item?.flavors ?? []) map.set(f.name, f._id);
@@ -36,19 +39,20 @@ const ProductModal = ({
   }, [item]);
 
   const toggleAvailability = async (flavorName, currentAvailable) => {
-    if (!storeEditable || !editMode || busy) return;
+    if (!storeEditable || !editMode) return;
 
     const flavorId = flavorIdByName.get(flavorName);
     if (!flavorId) return;
 
+    const flavorKey = String(flavorId);
+    if (pending.has(flavorKey)) return; // evita doble click en el mismo sabor
+
     const next = !currentAvailable;
 
-    // ---- OPTIMISTIC UI local ----
+    // ---- OPTIMISTIC UI: aplicamos cambio local inmediato ----
     const prev = item;
     const draft = structuredClone(item);
-    const target = draft.flavors.find(
-      (x) => String(x._id) === String(flavorId)
-    );
+    const target = draft.flavors.find((x) => String(x._id) === flavorKey);
     if (!target.available_location[activeStore]) {
       target.available_location[activeStore] = {
         available: false,
@@ -60,8 +64,7 @@ const ProductModal = ({
     setItem(draft);
     setOpenItem(draft);
 
-    // ---- Notificar al padre de inmediato (para lista + cache) ----
-    // Si prefieres notificar SOLO al confirmar el PATCH, mueve esta llamada al try{} luego del await.
+    // ---- Notifica al padre (lista + cache) de inmediato ----
     onAvailabilityChange?.({
       productId: item._id,
       flavorId,
@@ -69,32 +72,50 @@ const ProductModal = ({
       available: next,
     });
 
+    // Marca pendiente este sabor
+    setPending((old) => new Set([...old, flavorKey]));
+
+    // Toasts
+    const toastId = toast.loading('Guardando…');
+
+    // Hint “despertando servidor” si tarda
+    const wakeHint = setTimeout(() => {
+      toast('Despertando servidor… ⏳');
+    }, 800);
+
     try {
-      setBusy(true);
       await patchFlavorAvailability({
         productId: item._id,
         flavorId,
         storeId: activeStore,
         available: next,
       });
-      // éxito: no hace falta más, el padre ya quedó en sync
+
+      clearTimeout(wakeHint);
+      toast.success('Cambios guardados ✅', { id: toastId });
     } catch (e) {
-      // ---- rollback local ----
+      clearTimeout(wakeHint);
+
+      // ---- ROLLBACK local ----
       setItem(prev);
       setOpenItem(prev);
 
-      // ---- rollback en el padre para lista + cache ----
+      // ---- ROLLBACK en el padre ----
       onAvailabilityChange?.({
         productId: item._id,
         flavorId,
         storeId: activeStore,
-        available: currentAvailable, // volvemos al valor anterior
+        available: currentAvailable,
       });
 
+      toast.error('No se pudo guardar ❌', { id: toastId });
       console.error(e);
-      alert('No se pudo actualizar la disponibilidad. Intenta de nuevo.');
     } finally {
-      setBusy(false);
+      setPending((old) => {
+        const n = new Set(old);
+        n.delete(flavorKey);
+        return n;
+      });
     }
   };
 
@@ -164,7 +185,7 @@ const ProductModal = ({
               absolute right-2 bottom-2
               inline-flex items-center justify-center
               rounded-full p-2 text-xs
-            hover:bg-slate-200 dark:hover:bg-slate-800 transition
+              hover:bg-slate-200 dark:hover:bg-slate-800 transition
               ${
                 editMode
                   ? 'bg-slate-200 dark:bg-slate-800'
@@ -182,18 +203,18 @@ const ProductModal = ({
             {editMode ? (
               <svg
                 xmlns='http://www.w3.org/2000/svg'
-                height='24px'
+                height='24'
+                width='24'
                 viewBox='0 -960 960 960'
-                width='24px'
               >
                 <path d='m622-453-56-56 82-82-57-57-82 82-56-56 195-195q12-12 26.5-17.5T705-840q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L622-453ZM200-200h57l195-195-28-29-29-28-195 195v57ZM792-56 509-338 290-120H120v-169l219-219L56-792l57-57 736 736-57 57Zm-32-648-56-56 56 56Zm-169 56 57 57-57-57ZM424-424l-29-28 57 57-28-29Z' />
               </svg>
             ) : (
               <svg
                 xmlns='http://www.w3.org/2000/svg'
-                height='24px'
+                height='24'
+                width='24'
                 viewBox='0 -960 960 960'
-                width='24px'
               >
                 <path d='M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z' />
               </svg>
@@ -209,9 +230,9 @@ const ProductModal = ({
             <span className='sr-only'>Close</span>
             <svg
               xmlns='http://www.w3.org/2000/svg'
-              height='24px'
+              height='24'
+              width='24'
               viewBox='0 -960 960 960'
-              width='24px'
             >
               <path d='m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z' />
             </svg>
@@ -242,66 +263,92 @@ const ProductModal = ({
                     a.isAvailable === b.isAvailable ? 0 : a.isAvailable ? -1 : 1
                   )
                   .map((f) => {
-                    const actionTitle = f.isAvailable
-                      ? 'Desactivar en esta tienda'
-                      : 'Activar en esta tienda';
+                    const isInteractive = storeEditable && editMode;
+                    const fid = flavorIdByName.get(f.name);
+                    const isPending = fid ? pending.has(String(fid)) : false;
 
-                    const actionIcon = f.isAvailable ? (
-                      <svg
-                        xmlns='http://www.w3.org/2000/svg'
-                        height='20px'
-                        viewBox='0 -960 960 960'
-                        width='20px'
-                        fill='#BDD6AC'
-                      >
-                        <path d='m429-336 238-237-51-51-187 186-85-84-51 51 136 135ZM216-144q-29.7 0-50.85-21.15Q144-186.3 144-216v-528q0-29.7 21.15-50.85Q186.3-816 216-816h528q29.7 0 50.85 21.15Q816-773.7 816-744v528q0 29.7-21.15 50.85Q773.7-144 744-144H216Zm0-72h528v-528H216v528Zm0-528v528-528Z' />
-                      </svg>
-                    ) : (
-                      <svg
-                        xmlns='http://www.w3.org/2000/svg'
-                        height='20px'
-                        viewBox='0 -960 960 960'
-                        width='20px'
-                        fill='#DF9D9B'
-                      >
-                        <path d='M216-144q-29.7 0-50.85-21.15Q144-186.3 144-216v-528q0-29.7 21.15-50.85Q186.3-816 216-816h528q29.7 0 50.85 21.15Q816-773.7 816-744v528q0 29.7-21.15 50.85Q773.7-144 744-144H216Zm0-72h528v-528H216v528Z' />
-                      </svg>
-                    );
+                    const clickEnabled = isInteractive && !isPending;
+
+                    const actionTitle = clickEnabled
+                      ? f.isAvailable
+                        ? 'Desactivar en esta tienda'
+                        : 'Activar en esta tienda'
+                      : isInteractive
+                      ? f.isAvailable
+                        ? 'Desactivar (guardando...)'
+                        : 'Activar (guardando...)'
+                      : f.isAvailable
+                      ? 'Disponible en esta tienda'
+                      : 'No disponible en esta tienda';
+
+                    // Ícono: si está pendiente, mostramos spinner en lugar del check/cuadro
+                    const statusIcon = isInteractive ? (
+                      isPending ? (
+                        <svg
+                          xmlns='http://www.w3.org/2000/svg'
+                          viewBox='0 0 24 24'
+                          width='16'
+                          height='16'
+                          className='animate-spin'
+                          aria-hidden='true'
+                          focusable='false'
+                        >
+                          <path
+                            d='M12 2a10 10 0 1 0 10 10'
+                            fill='none'
+                            stroke='currentColor'
+                            strokeWidth='2'
+                          />
+                        </svg>
+                      ) : f.isAvailable ? (
+                        <svg
+                          xmlns='http://www.w3.org/2000/svg'
+                          height='20'
+                          width='20'
+                          viewBox='0 -960 960 960'
+                          className='fill-emerald-500'
+                          aria-hidden='true'
+                          focusable='false'
+                        >
+                          <path d='m429-336 238-237-51-51-187 186-85-84-51 51 136 135ZM216-144q-29.7 0-50.85-21.15Q144-186.3 144-216v-528q0-29.7 21.15-50.85Q186.3-816 216-816h528q29.7 0 50.85 21.15Q816-773.7 816-744v528q0 29.7-21.15 50.85Q773.7-144 744-144H216Z' />
+                        </svg>
+                      ) : (
+                        <svg
+                          xmlns='http://www.w3.org/2000/svg'
+                          height='20'
+                          width='20'
+                          viewBox='0 -960 960 960'
+                          className='fill-rose-500'
+                          aria-hidden='true'
+                          focusable='false'
+                        >
+                          <path d='M216-144q-29.7 0-50.85-21.15Q144-186.3 144-216v-528q0-29.7 21.15-50.85Q186.3-816 216-816h528q29.7 0 50.85 21.15Q816-773.7 816-744v528q0 29.7-21.15 50.85Q773.7-144 744-144H216Z' />
+                        </svg>
+                      )
+                    ) : null;
 
                     return (
-                      <div key={f.name}>
-                        <FlavorBadge
-                          name={f.name}
-                          color={f.color}
-                          isAvailable={f.isAvailable}
-                          title={
-                            editMode && storeEditable
-                              ? actionTitle
-                              : f.isAvailable
-                              ? 'Disponible en esta tienda'
-                              : 'No disponible en esta tienda'
-                          }
+                      <FlavorBadge
+                        key={f.name}
+                        color={f.color}
+                        isAvailable={f.isAvailable}
+                        title={actionTitle}
+                        onClick={
+                          clickEnabled
+                            ? () => toggleAvailability(f.name, f.isAvailable)
+                            : undefined
+                        }
+                        disabled={!clickEnabled}
+                      >
+                        <div
+                          className={`flex items-center gap-1 select-none ${
+                            isInteractive ? 'cursor-pointer' : ''
+                          }`}
                         >
-                          {/* 👇 Contenido del badge */}
-                          <div className='flex items-center'>
-                            {editMode && storeEditable && (
-                              <button
-                                type='button'
-                                disabled={busy}
-                                onClick={() =>
-                                  toggleAvailability(f.name, f.isAvailable)
-                                }
-                                className='disabled:opacity-50 transition-opacity duration-300 mr-1'
-                                aria-label={actionTitle}
-                                title={actionTitle}
-                              >
-                                {actionIcon}
-                              </button>
-                            )}
-                            <span>{f.name}</span>
-                          </div>
-                        </FlavorBadge>
-                      </div>
+                          {statusIcon}
+                          <span>{f.name}</span>
+                        </div>
+                      </FlavorBadge>
                     );
                   })}
               </div>

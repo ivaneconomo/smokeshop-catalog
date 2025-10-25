@@ -6,31 +6,34 @@ export default function FlavorBadge({
   color = 'slate',
   isAvailable,
   title,
-  children, // 👈 permite contenido adicional (como el icono o botón)
+  disabled,
+  onClick,
+  children,
 }) {
   if (!flavorColorMap[color]) color = 'slate';
   const c = flavorColorMap[color];
 
   const base =
-    'flex items-center gap-1 px-2.5 py-1 rounded-sm border md:text-md transition h-full';
+    // centrado vertical (items-center), alineado a la izquierda (justify-start, text-left)
+    'flex items-center justify-start text-left leading-snug ' +
+    'px-2.5 py-1 rounded-sm border md:text-md transition h-full select-none';
+
   const on = `${c.bg} ${c.text} ${c.border} ${c.darkBg} ${c.darkText} ${c.darkBorder}`;
   const off =
-    'bg-slate-200 text-slate-500 border-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-600 opacity-40 line-through';
+    'bg-slate-200 text-slate-500 border-slate-300 ' +
+    'dark:bg-slate-800 dark:text-slate-400 dark:border-slate-600 opacity-40 line-through';
 
   return (
     <span
       className={`${base} ${isAvailable ? on : off}`}
       title={title}
-      aria-disabled={!isAvailable}
+      aria-disabled={disabled}
       role='status'
+      onClick={disabled ? undefined : onClick}
     >
-      {/* 👇 si hay children (botón + texto), los muestra juntos */}
-      {children || (
-        <>
-          {name}
-          {!isAvailable && <span className='sr-only'>(no disponible)</span>}
-        </>
-      )}
+      <span className='flex items-center justify-start gap-1 w-full'>
+        {children ?? name}
+      </span>
     </span>
   );
 }
