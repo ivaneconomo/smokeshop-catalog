@@ -33,14 +33,14 @@
           maxInterval = 20000; // 2–4s entre pases (para test)
         const duration = 2000; // ⚡ velocidad (3s de izquierda a derecha)
         const spiderUrl = '/images/spider.gif';
-        const sizePx = 400; // tamaño del GIF
+        const sizePx = 300; // tamaño del GIF
 
         // Animación: L→R con leve “sway” vertical. SIN cambios de opacidad.
         const style = document.createElement('style');
         style.textContent = `
     @keyframes spiderLR {
-      0%   { transform: translateX(-30vw) translateY(0) scale(var(--scale)); }
-      25%  { transform: translateX(10vw)  translateY(-8px) scale(var(--scale)); }
+      0%   { transform: translateX(-20vw) translateY(0) scale(var(--scale)); }
+      25%  { transform: translateX(20vw)  translateY(-8px) scale(var(--scale)); }
       50%  { transform: translateX(60vw)  translateY( 8px) scale(var(--scale)); }
       75%  { transform: translateX(100vw) translateY(-6px) scale(var(--scale)); }
       100% { transform: translateX(120vw) translateY(0)   scale(var(--scale)); }
