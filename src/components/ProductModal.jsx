@@ -28,7 +28,7 @@ const ProductModal = ({
   // Lista de sabores pintables
   const flavors = useMemo(
     () => getFlavorStatus(item, activeStore),
-    [item, activeStore]
+    [item, activeStore],
   );
 
   // name -> _id (para API por id real)
@@ -132,7 +132,7 @@ const ProductModal = ({
           w-[min(92vw,1100px)]
           h-[90vh]
           [@media(min-height:799px)]:h-[60vh]
-          max-h-[900px]
+          max-h-225
           overflow-hidden
           rounded-xl
           bg-slate-200 dark:bg-slate-800
@@ -151,7 +151,7 @@ const ProductModal = ({
           <img
             src={item.image || item.img || item.src}
             alt={`${item.brand} ${item.model}`}
-            className='object-contain w-full max-w-[22rem] max-h-[85%] mx-auto'
+            className='object-contain w-full max-w-88 max-h-[85%] mx-auto'
             loading='eager'
             draggable={false}
           />
@@ -260,7 +260,11 @@ const ProductModal = ({
                 {flavors
                   .slice()
                   .sort((a, b) =>
-                    a.isAvailable === b.isAvailable ? 0 : a.isAvailable ? -1 : 1
+                    a.isAvailable === b.isAvailable
+                      ? 0
+                      : a.isAvailable
+                        ? -1
+                        : 1,
                   )
                   .map((f) => {
                     const isInteractive = storeEditable && editMode;
@@ -274,12 +278,12 @@ const ProductModal = ({
                         ? 'Desactivar en esta tienda'
                         : 'Activar en esta tienda'
                       : isInteractive
-                      ? f.isAvailable
-                        ? 'Desactivar (guardando...)'
-                        : 'Activar (guardando...)'
-                      : f.isAvailable
-                      ? 'Disponible en esta tienda'
-                      : 'No disponible en esta tienda';
+                        ? f.isAvailable
+                          ? 'Desactivar (guardando...)'
+                          : 'Activar (guardando...)'
+                        : f.isAvailable
+                          ? 'Disponible en esta tienda'
+                          : 'No disponible en esta tienda';
 
                     // Ícono: si está pendiente, mostramos spinner en lugar del check/cuadro
                     const statusIcon = isInteractive ? (

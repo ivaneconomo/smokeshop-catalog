@@ -60,7 +60,7 @@ export default function ProductsCatalog() {
     if (!Array.isArray(item.flavors) || item.flavors.length === 0) return false;
     if (!storeId) return false; // sin tienda activa no mostramos
     return item.flavors.some(
-      (f) => f?.available_location?.[storeId]?.available === true
+      (f) => f?.available_location?.[storeId]?.available === true,
     );
   };
 
@@ -81,9 +81,9 @@ export default function ProductsCatalog() {
   const baseVisible = useMemo(
     () =>
       localItems.filter(
-        (x) => x?.available === true && hasFlavorAvailableInStore(x, store)
+        (x) => x?.available === true && hasFlavorAvailableInStore(x, store),
       ),
-    [localItems, store]
+    [localItems, store],
   );
 
   // Filtro por texto: si hay tokens, exige que el producto tenga algún flavor
@@ -97,7 +97,7 @@ export default function ProductsCatalog() {
         if (!available) return false;
         const nameNorm = normalize(f.name);
         return queryTokens.every((t) => nameNorm.includes(t));
-      })
+      }),
     );
   }, [baseVisible, queryTokens, store]);
 
@@ -114,7 +114,7 @@ export default function ProductsCatalog() {
         /* noop */
       }
     },
-    [store, kindSafe]
+    [store, kindSafe],
   );
 
   // ---------- Callback que el modal invoca tras el PATCH ----------
@@ -161,7 +161,7 @@ export default function ProductsCatalog() {
                   },
                 },
               }
-            : f
+            : f,
         );
         return { ...prevOpen, flavors: nextFlavors };
       });
@@ -169,7 +169,7 @@ export default function ProductsCatalog() {
       // 4) Persistir en cache
       persistSnapshot(nextItems);
     },
-    [localItems, persistSnapshot]
+    [localItems, persistSnapshot],
   );
 
   // ---------- Abrir modal siempre con el objeto más fresco ----------
@@ -178,24 +178,24 @@ export default function ProductsCatalog() {
       const fresh = localItems.find((p) => String(p._id) === String(id));
       setOpenItem(fresh || null); // prioriza el snapshot más reciente
     },
-    [localItems]
+    [localItems],
   );
 
   return (
-    <section className='pb-4'>
+    <section className='pb-12'>
       <div className='mt-4 mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
         {/* Buscador en vivo */}
-        <form class='grow'>
+        <form className='grow'>
           <label
-            for='default-search'
-            class='mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white'
+            htmlFor='default-search'
+            className='mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white'
           >
             Search
           </label>
-          <div class='relative'>
-            <div class='absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none'>
+          <div className='relative'>
+            <div className='absolute inset-y-0 inset-s-0 flex items-center ps-3 pointer-events-none'>
               <svg
-                class='w-4 h-4 text-gray-500 dark:text-gray-400'
+                className='w-4 h-4 text-gray-500 dark:text-gray-400'
                 aria-hidden='true'
                 xmlns='http://www.w3.org/2000/svg'
                 fill='none'
@@ -203,9 +203,9 @@ export default function ProductsCatalog() {
               >
                 <path
                   stroke='currentColor'
-                  stroke-linecap='round'
-                  stroke-linejoin='round'
-                  stroke-width='2'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='2'
                   d='m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z'
                 />
               </svg>
@@ -213,7 +213,7 @@ export default function ProductsCatalog() {
             <input
               type='search'
               id='default-search'
-              class='block w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-md bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
+              className='block w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-md bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
               placeholder='Buscar'
               required
               value={query}

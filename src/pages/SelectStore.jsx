@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 const STORES = [
   { id: 'store_6', label: 'Tienda 6', img: '/images/logo_kings.png' },
+  { id: 'store_8', label: 'Tienda 8', img: '/images/logo_pdc.png' },
   { id: 'store_22', label: 'Tienda 22', img: '/images/logo_souvenir.png' },
   { id: 'store_28', label: 'Tienda 28', img: '/images/logo_exotic.png' },
 ];
@@ -11,7 +12,7 @@ export default function SelectStore() {
   const navigate = useNavigate();
   const { search } = useLocation();
   const [store, setStore] = useState(
-    () => localStorage.getItem('activeStore') || ''
+    () => localStorage.getItem('activeStore') || '',
   );
 
   useEffect(() => {
@@ -26,7 +27,7 @@ export default function SelectStore() {
   };
 
   return (
-    <section className='min-h-dvh flex flex-col gap-8 pt-8 md:px-8 justify-center items-center md:gap-16'>
+    <section className='min-h-dvh flex flex-col py-12 gap-8 justify-center items-center md:gap-16'>
       <div className='text-center space-y-4'>
         <h1 className='text-3xl sm:text-5xl font-bold'>SmokeShop · Catálogo</h1>
         <h2 className='text-lg sm:text-xl dark:text-slate-50/70 text-slate-900/70'>
@@ -34,7 +35,7 @@ export default function SelectStore() {
         </h2>
       </div>
 
-      <div className='flex flex-col items-center text-center gap-4 md:flex-row'>
+      <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 md:gap-4'>
         {STORES.map((s) => (
           <div
             key={s.id} // 👈 esto evita el warning
@@ -47,7 +48,7 @@ export default function SelectStore() {
             }}
             role='button'
             tabIndex={0}
-            className={`cursor-pointer select-none touch-manipulation transition-transform duration-200
+            className={`cursor-pointer select-none touch-manipulation transition-transform duration-200 flex flex-col items-center
         ${
           store === s.id
             ? 'scale-105 drop-shadow-[0_0_35px_rgba(251,191,36,0.4)]'
@@ -58,7 +59,7 @@ export default function SelectStore() {
             <img
               src={s.img}
               alt={s.label}
-              className='max-w-38 md:max-w-60'
+              className='max-w-38 md:max-w-32 lg:max-w-42 mx-auto'
               draggable={false}
               loading='eager'
             />

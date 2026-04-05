@@ -6,6 +6,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 const DEFAULT_STORES = [
   { id: 'all', label: 'Todas las tiendas' },
   { id: 'store_6', label: 'Tienda 6' },
+  { id: 'store_8', label: 'Tienda 8' },
   { id: 'store_22', label: 'Tienda 22' },
   { id: 'store_28', label: 'Tienda 28' },
 ];
@@ -35,7 +36,7 @@ export default function StoreSelector({ stores = DEFAULT_STORES }) {
   }, [value]);
 
   return (
-    <div className='w-full max-w-screen-md mb-4'>
+    <div className='w-full max-w-3xl mb-4'>
       <label className='block text-sm text-slate-600 mb-1'>Tienda</label>
       <select
         className='w-full rounded-md border border-slate-300 px-3 py-2 text-sm'
