@@ -8,11 +8,14 @@ import useStoreProducts from '../hooks/useStoreProducts';
 import RefreshButton from '../components/RefreshButton';
 import { cacheKeyForProducts, saveCache } from '../utils/cache';
 import { normalize } from '../utils/search'; // asegúrate de tener esta utilidad
+import { isFlavorAvailable, isProductAvailable } from '../utils/products';
 
-const VERSION = 'v1';
+const VERSION = 'v4';
 const TTL_MS = 12 * 60 * 60 * 1000; // 12h
 
 export default function ProductsCatalog() {
+  const [showOnlyAvailable, setShowOnlyAvailable] = useState(true);
+
   const [openItem, setOpenItem] = useState(null);
   const closeBtnRef = useRef(null);
 
@@ -20,7 +23,7 @@ export default function ProductsCatalog() {
   const qs = useMemo(() => new URLSearchParams(search), [search]);
 
   const rawKind = qs.get('kind');
-  const kindSafe = rawKind || '__all__';
+  const kindSafe = '__all__';
   const store = qs.get('store') || localStorage.getItem('activeStore'); // viene de SelectStore
 
   const { items, loading, error, fromCache, isRefreshing, refresh } =
@@ -53,17 +56,6 @@ export default function ProductsCatalog() {
     };
   }, [openItem]);
 
-  // visible ⇢ item.available === true
-  //        && item.flavors is array with length > 0
-  //        && some(flavor.available_location[store]?.available === true)
-  const hasFlavorAvailableInStore = (item, storeId) => {
-    if (!Array.isArray(item.flavors) || item.flavors.length === 0) return false;
-    if (!storeId) return false; // sin tienda activa no mostramos
-    return item.flavors.some(
-      (f) => f?.available_location?.[storeId]?.available === true,
-    );
-  };
-
   // ---------- BUSCADOR EN VIVO (sin sugerencias) ----------
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
@@ -78,28 +70,34 @@ export default function ProductsCatalog() {
   }, [debouncedQuery]);
 
   // Base: tus reglas actuales (producto disponible + al menos 1 flavor disponible en la tienda)
-  const baseVisible = useMemo(
-    () =>
-      localItems.filter(
-        (x) => x?.available === true && hasFlavorAvailableInStore(x, store),
-      ),
-    [localItems, store],
-  );
+  const baseVisible = useMemo(() => {
+    if (!showOnlyAvailable) {
+      return localItems; // 👈 muestra todo
+    }
+
+    return localItems.filter((x) => isProductAvailable(x, store));
+  }, [localItems, store, showOnlyAvailable]);
 
   // Filtro por texto: si hay tokens, exige que el producto tenga algún flavor
   // disponible en la tienda activa cuyo nombre incluya TODOS los tokens.
   const visibleItems = useMemo(() => {
     if (queryTokens.length === 0) return baseVisible;
 
-    return baseVisible.filter((p) =>
-      (p.flavors ?? []).some((f) => {
-        const available = !!f?.available_location?.[store]?.available;
-        if (!available) return false;
-        const nameNorm = normalize(f.name);
+    return baseVisible.filter((p) => {
+      const productText = normalize(
+        [p.brand, p.model, p.puffs, p.grams, p.dosage_mg, p.kind].join(' '),
+      );
+      const productMatch = queryTokens.every((t) => productText.includes(t));
+      if (productMatch) return true;
+
+      return [...(p.flavors ?? []), ...(p.strains ?? [])].some((variant) => {
+        const available = isFlavorAvailable(variant, store);
+        if (showOnlyAvailable && !available) return false;
+        const nameNorm = normalize(variant.name);
         return queryTokens.every((t) => nameNorm.includes(t));
-      }),
-    );
-  }, [baseVisible, queryTokens, store]);
+      });
+    });
+  }, [baseVisible, queryTokens, showOnlyAvailable, store]);
 
   // Spinner bloqueante solo si no hay nada aún (primera carga sin caché)
   const showBlockingSpinner = loading && visibleItems.length === 0;
@@ -107,6 +105,8 @@ export default function ProductsCatalog() {
   // ---------- Persistencia (misma key y formato que el hook) ----------
   const persistSnapshot = useCallback(
     (nextItems) => {
+      if (rawKind) return;
+
       try {
         const key = cacheKeyForProducts(store, VERSION, kindSafe);
         saveCache(key, nextItems); // {data, exp} con TTL default
@@ -114,7 +114,7 @@ export default function ProductsCatalog() {
         /* noop */
       }
     },
-    [store, kindSafe],
+    [rawKind, store, kindSafe],
   );
 
   // ---------- Callback que el modal invoca tras el PATCH ----------
@@ -235,6 +235,14 @@ export default function ProductsCatalog() {
             isRefreshing={isRefreshing}
             variant='primary'
           />
+          <label className='flex items-center gap-2 text-xs sm:text-sm cursor-pointer'>
+            <input
+              type='checkbox'
+              checked={showOnlyAvailable}
+              onChange={() => setShowOnlyAvailable((prev) => !prev)}
+            />
+            Solo disponibles
+          </label>
         </div>
       </div>
 

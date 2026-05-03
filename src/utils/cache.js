@@ -23,19 +23,17 @@ export const readCache = (key) => {
   try {
     const raw = localStorage.getItem(key);
     if (!raw) return null;
+
     const parsed = JSON.parse(raw);
 
-    // Backward-compat: si alguien guardó el array “crudo”, úsalo.
+    // compatibilidad vieja
     if (Array.isArray(parsed)) return parsed;
 
-    const { data, exp } = parsed || {};
-    if (!exp || Date.now() > exp) {
-      localStorage.removeItem(key);
-      return null;
-    }
+    const { data } = parsed || {};
+
+    // 👇 ya NO validas TTL aquí
     return data ?? null;
   } catch {
-    localStorage.removeItem(key);
     return null;
   }
 };

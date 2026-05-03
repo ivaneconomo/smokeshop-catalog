@@ -1,24 +1,60 @@
+import { Link } from 'react-router-dom';
 import { SaleStamp } from './SaleStamp';
 import { BestSellerStamp } from './BestSellerStamp';
 
-// Props extra opcionales:
-// - className: para ajustar desde afuera si hace falta
-// - priority: si quieres mantener 'eager' en los primeros ítems
-export const Card = ({ item, onPreview, className = '', priority = true }) => {
+const COMPONENT_LABELS = {
+  hhc: 'HHC',
+  d8: 'D8',
+  d10: 'D10',
+  cbd: 'CBD',
+  cbg: 'CBG',
+  cbn: 'CBN',
+  muscimol: 'Muscimol',
+  amanita_muscaria: 'Amanita',
+  lion_mane: "Lion's mane",
+  reishi: 'Reishi',
+  cordyceps: 'Cordyceps',
+  turkey_tail: 'Turkey tail',
+  mad_honey: 'Mad honey',
+  mushroom_blend: 'Mushroom blend',
+};
+
+export const Card = ({
+  item,
+  onPreview,
+  className = '',
+  priority = true,
+  emojiMap = {},
+}) => {
   const imgSrc = item.image || item.img || item.src || '';
   const label = `Ver grande ${item.brand} ${item.model || ''}`.trim();
+
+  const activeSubcats = (item.subcategories ?? []).filter((s) => s.level > 0);
+  const activeComponents = Object.entries(item.components ?? {}).filter(
+    ([, v]) => v,
+  );
+
+  const isEdible = item.kind === 'Edibles';
+
+  const details = isEdible
+    ? []
+    : [
+        item.puffs ? `${item.puffs} puffs` : null,
+        item.grams ? `${item.grams}g` : null,
+        item.dosage_mg ? `${item.dosage_mg}mg` : null,
+        !item.puffs && !item.grams && !item.dosage_mg ? item.kind : null,
+      ].filter(Boolean);
 
   return (
     <div
       className={[
-        'group relative flex flex-col h-fit rounded-md border border-slate-200/60 bg-slate-50 shadow-sm transition-shadow duration-300',
+        'group relative flex flex-col rounded-md border border-slate-200/60 bg-slate-50 shadow-sm transition-shadow duration-300',
         'hover:shadow-md dark:border-slate-700/60 dark:bg-slate-800/60',
-        // Ancho fluido por defecto; el grid/parent define columnas
         'w-full',
         className,
       ].join(' ')}
     >
-      {/* Imagen en contenedor con aspect ratio para mantener proporciones */}
+      {/* Image */}
       <div className='relative'>
         <button
           type='button'
@@ -27,43 +63,121 @@ export const Card = ({ item, onPreview, className = '', priority = true }) => {
           aria-label={label}
           title={label}
         >
-          {/* Contenedor con aspect ratio: más alto en móviles, más compacto en desktop */}
           <div className='relative w-full aspect-square overflow-hidden rounded-t-md'>
             <img
               src={imgSrc}
               alt={`${item.brand} ${item.model ?? ''}`}
               className='absolute inset-0 h-full w-full object-contain pointer-events-none'
               loading={priority ? 'eager' : 'lazy'}
-              // Ajusta cómo se descarga en cada breakpoint para mejor CLS/LCP
               sizes='(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw'
             />
           </div>
         </button>
 
-        {/* Sellos responsivos */}
         {item.on_sale && (
           <SaleStamp className='left-0 top-0 max-w-48 sm:max-w-32 md:max-w-36' />
         )}
         {item.on_featured && (
           <BestSellerStamp className='left-0 top-0 max-w-48 sm:max-w-32 md:max-w-36' />
         )}
+
+        <Link
+          to={`/products/${item._id}/edit`}
+          onClick={(e) => e.stopPropagation()}
+          aria-label='Editar producto'
+          className='absolute right-2 top-2 rounded-full bg-white/80 p-1.5 text-slate-500 opacity-0 shadow transition hover:bg-white hover:text-blue-600 group-hover:opacity-100 dark:bg-slate-800/80 dark:hover:bg-slate-800 dark:text-slate-400 dark:hover:text-blue-400'
+        >
+          <svg
+            xmlns='http://www.w3.org/2000/svg'
+            width='14'
+            height='14'
+            fill='currentColor'
+            viewBox='0 0 256 256'
+          >
+            <path d='M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.68,147.31,64l24-24L216,84.68Z' />
+          </svg>
+        </Link>
       </div>
 
-      {/* Texto */}
-      <div className='py-2 px-3'>
-        <h2 className='text-lg font-semibold text-slate-900 dark:text-white leading-snug'>
-          <span className='truncate block'>
-            {item.brand}
-            {' · '}
-            <span className='font-light text-slate-800 dark:text-slate-300'>
-              {item.model}
+      {/* Content */}
+      {isEdible ? (
+        <div className='py-2 px-3 flex flex-col gap-1.5 flex-1'>
+          <h2 className='text-lg font-semibold text-slate-900 dark:text-white leading-snug'>
+            <span className='truncate block'>
+              {item.brand}
+              {' · '}
+              <span className='font-light text-slate-800 dark:text-slate-300'>
+                {item.model}
+              </span>
+              {item.dosage_mg > 0 && (
+                <span className='font-light text-slate-500 dark:text-slate-400'>
+                  {' · '}
+                  {item.dosage_mg} mg
+                </span>
+              )}
             </span>
-          </span>
-        </h2>
-        <h3 className='dark:text-slate-100/70 '>{item.puffs} puffs</h3>
-        {/* Lugar para subtítulo, precio o badges si luego quieres */}
-        {/* <p className="mt-1 text-sm text-slate-600 dark:text-slate-400 line-clamp-2">{item.description}</p> */}
-      </div>
+          </h2>
+
+          {activeComponents.length > 0 && (
+            <div className='flex flex-wrap gap-1'>
+              {activeComponents.map(([key]) => (
+                <span
+                  key={key}
+                  className='px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded dark:bg-blue-900 dark:text-blue-200'
+                >
+                  {COMPONENT_LABELS[key] || key}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {activeSubcats.length > 0 && (
+            <div className='flex flex-col gap-1 mt-auto pt-1'>
+              {activeSubcats.map((s) => (
+                <div key={s.name} className='flex items-center gap-1.5'>
+                  <span className='text-sm leading-none'>
+                    {emojiMap[s.name] || '•'}
+                  </span>
+                  <div className='flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden'>
+                    <div
+                      className='h-full rounded-full bg-linear-to-r from-blue-400 to-purple-500'
+                      style={{ width: `${(s.level / 5) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className='py-2 px-3 space-y-1.5 flex-1'>
+          <h2 className='text-lg font-semibold text-slate-900 dark:text-white leading-snug'>
+            <span className='truncate block'>
+              {item.brand}
+              {' - '}
+              <span className='font-light text-slate-800 dark:text-slate-300'>
+                {item.model}
+              </span>
+            </span>
+          </h2>
+          {details.length > 0 && (
+            <h3 className='dark:text-slate-100/70'>{details.join(' - ')}</h3>
+          )}
+          {activeSubcats.map((s) => (
+            <div key={s.name} className='flex items-center gap-2'>
+              <span className='text-base leading-none'>
+                {emojiMap[s.name] || '•'}
+              </span>
+              <div className='flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden'>
+                <div
+                  className='h-full rounded-full bg-linear-to-r from-blue-400 to-purple-500'
+                  style={{ width: `${(s.level / 5) * 100}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

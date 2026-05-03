@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { getProducts } from '../services/api';
 import { cacheKeyForProducts, readCache, saveCache } from '../utils/cache';
+import { ALL_KINDS, matchesProductKind } from '../utils/productKinds';
 
 /**
  * Cache-first + refresh manual no bloqueante.
@@ -14,9 +15,10 @@ import { cacheKeyForProducts, readCache, saveCache } from '../utils/cache';
 export default function useStoreProducts({
   storeId,
   kind,
-  version = 'v1',
+  version = 'v2',
   ttlMs, // opcional
 } = {}) {
+  const resolvedStoreId = storeId || 'all';
   const [items, setItems] = useState([]);
   const [loading, setLoad] = useState(true); // bloqueante solo en primera carga sin caché
   const [error, setError] = useState(null);
@@ -27,6 +29,9 @@ export default function useStoreProducts({
   const sortProducts = (arr) => {
     const a = Array.isArray(arr) ? arr : [];
     return [...a].sort((x, y) => {
+      const xo = x?.sort_order ?? Infinity;
+      const yo = y?.sort_order ?? Infinity;
+      if (xo !== yo) return xo - yo;
       const xp = Number(x?.puffs ?? -1);
       const yp = Number(y?.puffs ?? -1);
       if (xp !== yp) return xp - yp;
@@ -36,20 +41,21 @@ export default function useStoreProducts({
     });
   };
 
+  const filterProducts = useCallback(
+    (arr) => sortProducts(arr).filter((item) => matchesProductKind(item, kind)),
+    [kind],
+  );
+
   // Refresh manual (no bloquea la UI)
   const refresh = useCallback(async () => {
-    if (!storeId) return;
     setIsRefreshing(true);
     setError(null);
     try {
-      const params = { store: storeId };
-      if (kind) params.kind = kind;
-
-      const data = await getProducts(params);
+      const data = await getProducts();
       const payload = Array.isArray(data) ? data : data?.items || [];
       const sorted = sortProducts(payload);
 
-      setItems(sorted);
+      setItems(filterProducts(sorted));
       setFromCache(false);
       saveCache(keyRef.current, sorted, ttlMs);
     } catch (e) {
@@ -58,50 +64,36 @@ export default function useStoreProducts({
     } finally {
       setIsRefreshing(false);
     }
-  }, [storeId, kind, ttlMs]);
+  }, [filterProducts, ttlMs]);
 
   // Carga inicial
   useEffect(() => {
     let mounted = true;
 
-    if (!storeId) {
-      setItems([]);
-      setLoad(false);
-      setError(null);
-      setFromCache(false);
-      return () => {
-        mounted = false;
-      };
-    }
-
     (async () => {
       setLoad(true);
       setError(null);
 
-      const kindSafe = kind || '__all__';
-      const key = cacheKeyForProducts(storeId, version, kindSafe);
+      const kindSafe = ALL_KINDS;
+      const key = cacheKeyForProducts(resolvedStoreId, version, kindSafe);
       keyRef.current = key;
 
       const cached = readCache(key);
       if (cached && Array.isArray(cached)) {
         if (!mounted) return;
-        setItems(cached);
+        setItems(filterProducts(cached));
         setFromCache(true);
-        setLoad(false); // hay caché → no llamamos a DB
-        return;
+        setLoad(false);
       }
 
       // Sin caché → llamada inicial a DB (bloqueante)
       try {
-        const params = { store: storeId };
-        if (kind) params.kind = kind;
-
-        const data = await getProducts(params);
+        const data = await getProducts();
         const payload = Array.isArray(data) ? data : data?.items || [];
         const sorted = sortProducts(payload);
 
         if (!mounted) return;
-        setItems(sorted);
+        setItems(filterProducts(sorted));
         setFromCache(false);
         saveCache(key, sorted, ttlMs);
       } catch (e) {
@@ -116,7 +108,7 @@ export default function useStoreProducts({
     return () => {
       mounted = false;
     };
-  }, [storeId, kind, version, ttlMs]);
+  }, [storeId, kind, version, ttlMs, resolvedStoreId, filterProducts]);
 
   return { items, loading, error, fromCache, isRefreshing, refresh };
 }

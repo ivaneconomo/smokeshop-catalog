@@ -17,6 +17,7 @@ const ProductModal = ({
   // Estado local
   const [item, setItem] = useState(openItem);
   const [editMode, setEditMode] = useState(false);
+  const [showComponents, setShowComponents] = useState(false);
 
   // Pendientes por sabor (Set de flavorIds en curso)
   const [pending, setPending] = useState(() => new Set());
@@ -358,6 +359,51 @@ const ProductModal = ({
               </div>
             </section>
           )}
+          {/* Componentes */}
+          {(() => {
+            const COMPONENT_LABELS = {
+              hhc: 'HHC', d8: 'Delta 8', d10: 'Delta 10', cbd: 'CBD',
+              cbg: 'CBG', cbn: 'CBN', mushrooms: 'Mushrooms',
+              mushroom_blend: 'Mushroom Blend', muscimol: 'Muscimol',
+              amanita_muscaria: 'Amanita', lion_mane: "Lion's Mane",
+              reishi: 'Reishi', cordyceps: 'Cordyceps',
+              turkey_tail: 'Turkey Tail', mad_honey: 'Mad Honey',
+            };
+            const active = Object.entries(item.components ?? {}).filter(([, v]) => v);
+            if (active.length === 0) return null;
+            return (
+              <section className='mt-4'>
+                <button
+                  type='button'
+                  onClick={() => setShowComponents((v) => !v)}
+                  className='flex items-center gap-1 text-lg text-slate-700 dark:text-slate-200'
+                >
+                  <span>Componentes</span>
+                  <svg
+                    className={`w-4 h-4 transition-transform ${showComponents ? 'rotate-180' : ''}`}
+                    xmlns='http://www.w3.org/2000/svg'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    stroke='currentColor'
+                  >
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+                  </svg>
+                </button>
+                {showComponents && (
+                  <div className='mt-2 flex flex-wrap gap-2'>
+                    {active.map(([key]) => (
+                      <span
+                        key={key}
+                        className='rounded-md border border-blue-500 px-3 py-1 text-sm text-blue-600 dark:text-blue-300 dark:border-blue-400'
+                      >
+                        {COMPONENT_LABELS[key] ?? key}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </section>
+            );
+          })()}
         </div>
       </div>
     </div>

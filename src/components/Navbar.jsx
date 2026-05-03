@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 // ──────────────────────────────
 // Definí aquí las tiendas y sus logos
@@ -26,12 +26,14 @@ const STORES = {
 export default function Navbar() {
   const { search, pathname } = useLocation();
   const currentKind = new URLSearchParams(search).get('kind');
+  const qs = new URLSearchParams(search);
   const currentStore =
-    new URLSearchParams(search).get('store') ||
-    localStorage.getItem('activeStore');
+    qs.get('store') || localStorage.getItem('activeStore');
 
   const [storeLogo, setStoreLogo] = useState(null);
   const [storeName, setStoreName] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
 
   useEffect(() => {
     if (currentStore && STORES[currentStore]) {
@@ -43,14 +45,37 @@ export default function Navbar() {
     }
   }, [currentStore]);
 
-  if (pathname !== '/products') return null;
+  useEffect(() => {
+    const handler = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  if (!pathname.startsWith('/products') && !pathname.startsWith('/categories')) {
+    return null;
+  }
 
   const links = [
     { name: 'Tiendas', to: '/' },
-    // { name: 'Nicotine', to: '/products?kind=NicDisposable' },
-    // { name: 'HHC', to: '/products?kind=HHCDisposable' },
-    // { name: 'Edibles', to: '/products?kind=Edible' },
+    {
+      name: 'Categorias',
+      to: `/categories${currentStore ? `?store=${currentStore}` : ''}`,
+    },
   ];
+
+  const adminLinks = [
+    { name: 'Crear producto', to: '/products/new' },
+    { name: 'Ordenar / Visibilidad', to: '/products/sort' },
+  ];
+
+  const isAdminActive =
+    pathname === '/products/new' ||
+    pathname === '/products/sort' ||
+    pathname.endsWith('/edit');
 
   return (
     <nav className='w-full bg-transparent border-b border-slate-200 dark:border-slate-700'>
@@ -72,13 +97,13 @@ export default function Navbar() {
         <div className='flex flex-wrap gap-3 mt-3 sm:mt-0'>
           {links.map((link) => {
             const isActive =
-              link.to.includes(currentKind) ||
-              (!currentKind && link.name === 'Todos');
+              (link.name === 'Categorias' && pathname.startsWith('/categories')) ||
+              (currentKind && link.to.includes(currentKind));
             return (
               <Link
                 key={link.name}
                 to={link.to}
-                className={`text-white bg-linear-to-br from-purple-600 to-blue-500 hover:bg-linear-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-4 py-2 text-center 
+                className={`text-white bg-linear-to-br from-purple-600 to-blue-500 hover:bg-linear-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-4 py-2 text-center
                   ${
                     isActive
                       ? 'bg-slate-50 text-slate-900 shadow'
@@ -89,6 +114,48 @@ export default function Navbar() {
               </Link>
             );
           })}
+
+          {/* Dropdown Gestionar */}
+          <div className='relative' ref={menuRef}>
+            <button
+              type='button'
+              onClick={() => setMenuOpen((o) => !o)}
+              className={`flex items-center gap-1 font-medium rounded-lg text-sm px-4 py-2 text-white bg-linear-to-br from-purple-600 to-blue-500 hover:bg-linear-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 transition-colors duration-150 ${
+                isAdminActive ? 'ring-2 ring-blue-400' : ''
+              }`}
+            >
+              Gestionar
+              <svg
+                className={`w-3.5 h-3.5 transition-transform ${menuOpen ? 'rotate-180' : ''}`}
+                xmlns='http://www.w3.org/2000/svg'
+                fill='none'
+                viewBox='0 0 10 6'
+              >
+                <path
+                  stroke='currentColor'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='2'
+                  d='m1 1 4 4 4-4'
+                />
+              </svg>
+            </button>
+
+            {menuOpen && (
+              <div className='absolute right-0 z-50 mt-1 w-48 rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-800'>
+                {adminLinks.map((link) => (
+                  <Link
+                    key={link.name}
+                    to={link.to}
+                    onClick={() => setMenuOpen(false)}
+                    className='block px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700 first:rounded-t-lg last:rounded-b-lg'
+                  >
+                    {link.name}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </nav>

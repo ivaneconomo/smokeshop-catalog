@@ -44,6 +44,30 @@ export default api;
 export const getProducts = (opts = {}) =>
   api.get('/products', { params: opts }).then((r) => r.data);
 
+export const createProduct = (payload) =>
+  api.post('/products', payload).then((r) => r.data);
+
+export const reorderProducts = (ids) =>
+  api.patch('/products/reorder', { ids }).then((r) => r.data);
+
+export const getKindVisibility = () =>
+  api.get('/settings/kind-visibility').then((r) => r.data);
+
+export const updateKindVisibility = (hidden_kinds) =>
+  api.patch('/settings/kind-visibility', { hidden_kinds }).then((r) => r.data);
+
+export const getProductById = (id) =>
+  api.get(`/products/${id}`).then((r) => r.data);
+
+export const updateProduct = (id, data) =>
+  api.patch(`/products/${id}`, data).then((r) => r.data);
+
+export const getSubcategories = () =>
+  api.get('/settings/subcategories').then((r) => r.data);
+
+export const updateSubcategories = (subcategories) =>
+  api.patch('/settings/subcategories', { subcategories }).then((r) => r.data);
+
 export const patchFlavorAvailability = ({
   productId,
   flavorId,

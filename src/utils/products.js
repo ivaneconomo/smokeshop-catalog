@@ -104,6 +104,15 @@ export function isFlavorAvailable(flavor, activeStore) {
   return storeMeta?.available === true; // puedes agregar && storeMeta.quantity > 0 si quieres condicionar a stock
 }
 
+export function isProductAvailable(item, activeStore) {
+  if (item?.available !== true) return false;
+
+  const variants = [...(item?.flavors || []), ...(item?.strains || [])];
+  if (variants.length === 0) return true;
+
+  return variants.some((variant) => isFlavorAvailable(variant, activeStore));
+}
+
 // Devuelve todos los sabores con su status calculado
 export function getFlavorStatus(item, activeStore) {
   const list = Array.isArray(item?.flavors) ? item.flavors : [];

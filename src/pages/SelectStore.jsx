@@ -23,7 +23,7 @@ export default function SelectStore() {
 
   const confirmSelection = (id) => {
     localStorage.setItem('activeStore', id);
-    navigate(`/products?store=${id}`);
+    navigate(`/categories?store=${id}`);
   };
 
   return (
