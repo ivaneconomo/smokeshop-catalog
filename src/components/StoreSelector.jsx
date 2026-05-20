@@ -1,35 +1,31 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useCatalogConfig } from '../hooks/useCatalogConfig';
 
-// Puedes traer este listado del backend luego.
-// Por ahora lo dejamos fijo para avanzar rápido.
-const DEFAULT_STORES = [
-  { id: 'all', label: 'Todas las tiendas' },
-  { id: 'store_6', label: 'Tienda 6' },
-  { id: 'store_8', label: 'Tienda 8' },
-  { id: 'store_22', label: 'Tienda 22' },
-  { id: 'store_28', label: 'Tienda 28' },
-];
-
-export default function StoreSelector({ stores = DEFAULT_STORES }) {
+export default function StoreSelector() {
   const navigate = useNavigate();
   const { search, pathname } = useLocation();
+  const { stores } = useCatalogConfig();
   const qs = useMemo(() => new URLSearchParams(search), [search]);
 
+  const allOption = { id: 'all', name: 'Todas las tiendas' };
+  const options = [allOption, ...stores];
+
+  // Prioridad: QP > localStorage > primer opción disponible
   const initial =
     qs.get('store') ||
     localStorage.getItem('activeStore') ||
-    stores[0]?.id ||
+    options[0]?.id ||
     'all';
 
   const [value, setValue] = useState(initial);
 
+  // Sincroniza URL y localStorage al cambiar tienda; replace evita entradas extra en el historial
+  // Se omite navigate/pathname de deps a propósito: solo debe correr cuando cambia value
   useEffect(() => {
-    // sincroniza URL y localStorage cuando cambia value
     const next = new URLSearchParams(search);
     if (value && value !== 'all') next.set('store', value);
     else next.delete('store');
-
     localStorage.setItem('activeStore', value);
     navigate(`${pathname}?${next.toString()}`, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -43,9 +39,9 @@ export default function StoreSelector({ stores = DEFAULT_STORES }) {
         value={value}
         onChange={(e) => setValue(e.target.value)}
       >
-        {stores.map((s) => (
+        {options.map((s) => (
           <option key={s.id} value={s.id}>
-            {s.label}
+            {s.name}
           </option>
         ))}
       </select>

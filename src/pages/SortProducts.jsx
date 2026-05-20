@@ -18,9 +18,9 @@ import { getProducts, reorderProducts, getKindVisibility, updateKindVisibility, 
 import { toast } from 'react-hot-toast';
 
 
-function SortableRow({ product, onToggleVisible }) {
+function SortableRow({ product, onToggleVisible, dragDisabled }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: product._id });
+    useSortable({ id: product._id, disabled: dragDisabled });
 
   const visible = product.catalog_visible !== false;
 
@@ -41,10 +41,10 @@ function SortableRow({ product, onToggleVisible }) {
       }`}
     >
       <button
-        {...attributes}
-        {...listeners}
-        className='cursor-grab active:cursor-grabbing text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 touch-none'
+        {...(!dragDisabled ? { ...attributes, ...listeners } : {})}
+        className={`touch-none text-slate-400 dark:text-slate-500 transition ${dragDisabled ? 'opacity-30 cursor-default' : 'cursor-grab active:cursor-grabbing hover:text-slate-600 dark:hover:text-slate-300'}`}
         aria-label='Arrastrar'
+        disabled={dragDisabled}
       >
         <svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='currentColor' viewBox='0 0 256 256'>
           <path d='M104,60a12,12,0,1,1,12,12A12,12,0,0,1,104,60Zm12,44a12,12,0,1,0,12,12A12,12,0,0,0,116,104Zm0,56a12,12,0,1,0,12,12A12,12,0,0,0,116,160Zm24-96a12,12,0,1,0,12,12A12,12,0,0,0,140,64Zm0,56a12,12,0,1,0,12,12A12,12,0,0,0,140,120Zm0,56a12,12,0,1,0,12,12A12,12,0,0,0,140,176Z'/>
@@ -106,9 +106,12 @@ export default function SortProducts() {
   const [hiddenKinds, setHiddenKinds] = useState([]);
   const [kind, setKind] = useState('Nicotine');
   const [list, setList] = useState([]);
+  const [sortByPuffs, setSortByPuffs] = useState(false);
   const [saving, setSaving] = useState(false);
   const [savingVisibility, setSavingVisibility] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const activeStore = localStorage.getItem('activeStore');
 
   useEffect(() => {
     Promise.all([getProducts(), getKindVisibility()])
@@ -118,7 +121,8 @@ export default function SortProducts() {
         const kinds = [...new Set(products.map((p) => p.kind).filter(Boolean))].sort();
         setAvailableKinds(kinds);
         if (kinds.length > 0) setKind(kinds[0]);
-        setHiddenKinds(vis.hidden_kinds ?? []);
+        const byStore = vis.hidden_kinds_by_store ?? {};
+        setHiddenKinds(activeStore ? (byStore[activeStore] ?? []) : []);
       })
       .catch(() => toast.error('Error al cargar datos'))
       .finally(() => setLoading(false));
@@ -131,9 +135,13 @@ export default function SortProducts() {
   };
 
   const handleSaveVisibility = async () => {
+    if (!activeStore || activeStore === 'all') {
+      toast.error('Seleccioná una tienda para guardar la visibilidad');
+      return;
+    }
     setSavingVisibility(true);
     try {
-      await updateKindVisibility(hiddenKinds);
+      await updateKindVisibility(activeStore, hiddenKinds);
       toast.success('Visibilidad guardada');
     } catch {
       toast.error('Error al guardar visibilidad');
@@ -142,12 +150,29 @@ export default function SortProducts() {
     }
   };
 
+  // Resetea el modo de orden al cambiar de categoría
   useEffect(() => {
-    const filtered = allProducts
-      .filter((p) => p.kind === kind)
-      .sort((a, b) => (a.sort_order ?? Infinity) - (b.sort_order ?? Infinity));
-    setList(filtered);
-  }, [allProducts, kind]);
+    setSortByPuffs(kind === 'Nicotine');
+  }, [kind]);
+
+  useEffect(() => {
+    const filtered = allProducts.filter((p) => p.kind === kind);
+    if (sortByPuffs) {
+      setList([...filtered].sort((x, y) => {
+        const xo = x?.sort_order ?? Infinity;
+        const yo = y?.sort_order ?? Infinity;
+        if (xo !== yo) return xo - yo;
+        const xp = Number(x?.puffs ?? -1);
+        const yp = Number(y?.puffs ?? -1);
+        if (xp !== yp) return xp - yp;
+        const xb = (x?.brand || '').localeCompare(y?.brand || '');
+        if (xb !== 0) return xb;
+        return (x?.model || '').localeCompare(y?.model || '');
+      }));
+    } else {
+      setList([...filtered].sort((a, b) => (a.sort_order ?? Infinity) - (b.sort_order ?? Infinity)));
+    }
+  }, [allProducts, kind, sortByPuffs]);
 
   const sensors = useSensors(useSensor(PointerSensor));
 
@@ -162,12 +187,14 @@ export default function SortProducts() {
 
   const handleToggleVisible = async (productId, currentVisible) => {
     const next = !currentVisible;
+    // Optimistic: actualiza la UI antes de confirmar con la API
     setAllProducts((prev) =>
       prev.map((p) => (p._id === productId ? { ...p, catalog_visible: next } : p)),
     );
     try {
       await updateProduct(productId, { catalog_visible: next });
     } catch {
+      // Rollback si el PATCH falla
       setAllProducts((prev) =>
         prev.map((p) => (p._id === productId ? { ...p, catalog_visible: currentVisible } : p)),
       );
@@ -179,6 +206,7 @@ export default function SortProducts() {
     setSaving(true);
     try {
       await reorderProducts(list.map((p) => p._id));
+      // Actualiza sort_order local para que el orden persista si se cambia de tab y se vuelve
       setAllProducts((prev) =>
         prev.map((p) => {
           const idx = list.findIndex((l) => l._id === p._id);
@@ -195,87 +223,110 @@ export default function SortProducts() {
 
   return (
     <section className='py-6 space-y-5'>
-      <div className='flex flex-wrap items-center justify-between gap-3'>
-        <h2 className='text-xl font-semibold text-slate-900 dark:text-slate-100'>
-          Ordenar productos
-        </h2>
-        <button
-          onClick={handleSave}
-          disabled={saving || list.length === 0}
-          className='rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition'
-        >
-          {saving ? 'Guardando…' : 'Guardar orden'}
-        </button>
-      </div>
-
-      {/* Visibilidad de categorías */}
-      {!loading && availableKinds.length > 0 && (
-        <div className='rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 space-y-3'>
-          <p className='text-sm font-medium text-slate-700 dark:text-slate-200'>
-            Visibilidad en el catálogo
-          </p>
-          <div className='flex flex-wrap gap-3'>
-            {availableKinds.map((k) => {
-              const visible = !hiddenKinds.includes(k);
-              return (
+        {/* Visibilidad de categorías */}
+        {!loading && availableKinds.length > 0 && (
+          <div className='rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 space-y-3'>
+            <p className='text-sm font-medium text-slate-700 dark:text-slate-200'>
+              Visibilidad en el catálogo
+            </p>
+            <div className='flex flex-wrap gap-3'>
+              {availableKinds.map((k) => (
                 <label key={k} className='flex items-center gap-2 cursor-pointer select-none text-sm text-slate-700 dark:text-slate-200'>
                   <input
                     type='checkbox'
-                    checked={visible}
+                    checked={!hiddenKinds.includes(k)}
                     onChange={() => toggleKindVisibility(k)}
                     className='w-4 h-4 accent-blue-600'
                   />
                   {k}
                 </label>
-              );
-            })}
+              ))}
+            </div>
+            <button
+              onClick={handleSaveVisibility}
+              disabled={savingVisibility}
+              className='rounded-lg bg-slate-700 dark:bg-slate-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-600 dark:hover:bg-slate-500 disabled:opacity-50 transition'
+            >
+              {savingVisibility ? 'Guardando…' : 'Guardar visibilidad'}
+            </button>
           </div>
-          <button
-            onClick={handleSaveVisibility}
-            disabled={savingVisibility}
-            className='rounded-lg bg-slate-700 dark:bg-slate-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-600 dark:hover:bg-slate-500 disabled:opacity-50 transition'
-          >
-            {savingVisibility ? 'Guardando…' : 'Guardar visibilidad'}
-          </button>
-        </div>
-      )}
-
-      {/* Tabs por categoría */}
-      <div className='flex gap-2 flex-wrap'>
-        {availableKinds.map((k) => (
-          <button
-            key={k}
-            onClick={() => setKind(k)}
-            className={`rounded-full border px-3 py-1.5 text-sm transition ${
-              kind === k
-                ? 'border-blue-500 bg-blue-500 text-white'
-                : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
-            }`}
-          >
-            {k}
-          </button>
-        ))}
-      </div>
-
-      {loading && (
+        )}
+      {loading ? (
         <p className='text-slate-500 dark:text-slate-400 text-sm'>Cargando…</p>
-      )}
+      ) : (
+        <>
+          <div className='flex flex-wrap items-center justify-between gap-3'>
+            <h2 className='text-xl font-semibold text-slate-900 dark:text-slate-100'>
+              Ordenar productos
+            </h2>
+            <button
+              onClick={handleSave}
+              disabled={saving || list.length === 0 || sortByPuffs}
+              className='rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition'
+            >
+              {saving ? 'Guardando…' : 'Guardar orden'}
+            </button>
+          </div>
 
-      {!loading && list.length === 0 && (
-        <p className='text-slate-500 dark:text-slate-400 text-sm'>
-          No hay productos en esta categoría.
-        </p>
-      )}
-
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={list.map((p) => p._id)} strategy={verticalListSortingStrategy}>
-          <div className='space-y-2'>
-            {list.map((product) => (
-              <SortableRow key={product._id} product={product} onToggleVisible={handleToggleVisible} />
+          {/* Tabs por categoría */}
+          <div className='flex gap-2 flex-wrap'>
+            {availableKinds.map((k) => (
+              <button
+                key={k}
+                onClick={() => setKind(k)}
+                className={`rounded-full border px-3 py-1.5 text-sm transition ${
+                  kind === k
+                    ? 'border-blue-500 bg-blue-500 text-white'
+                    : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                {k}
+              </button>
             ))}
           </div>
-        </SortableContext>
-      </DndContext>
+
+          {kind === 'Nicotine' && (
+            <div className='flex gap-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3'>
+              <label className='flex items-center gap-2 cursor-pointer select-none text-sm text-slate-700 dark:text-slate-200'>
+                <input
+                  type='radio'
+                  name='nicotine-sort-mode'
+                  checked={sortByPuffs}
+                  onChange={() => setSortByPuffs(true)}
+                  className='accent-blue-600'
+                />
+                Ordenar por puffs
+              </label>
+              <label className='flex items-center gap-2 cursor-pointer select-none text-sm text-slate-700 dark:text-slate-200'>
+                <input
+                  type='radio'
+                  name='nicotine-sort-mode'
+                  checked={!sortByPuffs}
+                  onChange={() => setSortByPuffs(false)}
+                  className='accent-blue-600'
+                />
+                Ordenar manual
+              </label>
+            </div>
+          )}
+
+          {list.length === 0 ? (
+            <p className='text-slate-500 dark:text-slate-400 text-sm'>
+              No hay productos en esta categoría.
+            </p>
+          ) : (
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={list.map((p) => p._id)} strategy={verticalListSortingStrategy}>
+                <div className='space-y-2'>
+                  {list.map((product) => (
+                    <SortableRow key={product._id} product={product} onToggleVisible={handleToggleVisible} dragDisabled={sortByPuffs} />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          )}
+        </>
+      )}
     </section>
   );
 }

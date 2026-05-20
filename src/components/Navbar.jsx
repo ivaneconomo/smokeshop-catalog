@@ -1,60 +1,33 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
-
-// ──────────────────────────────
-// Definí aquí las tiendas y sus logos
-// ──────────────────────────────
-const STORES = {
-  store_6: {
-    name: 'The Kings Shop',
-    logo: '/images/logo_kings.png',
-  },
-  store_8: {
-    name: 'PDC Smoke Shop',
-    logo: '/images/logo_pdc.png',
-  },
-  store_22: {
-    name: 'Smoke Shop Souvenir',
-    logo: '/images/logo_souvenir.png',
-  },
-  store_28: {
-    name: 'Exotic Smoke Shop',
-    logo: '/images/logo_exotic.png',
-  },
-};
+import { useCatalogConfig } from '../hooks/useCatalogConfig';
 
 export default function Navbar() {
   const { search, pathname } = useLocation();
   const currentKind = new URLSearchParams(search).get('kind');
   const qs = new URLSearchParams(search);
+  // Prioriza el QP; cae a localStorage para que persista entre navegaciones directas
   const currentStore =
     qs.get('store') || localStorage.getItem('activeStore');
 
-  const [storeLogo, setStoreLogo] = useState(null);
-  const [storeName, setStoreName] = useState('');
+  const { storeById } = useCatalogConfig();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
-  useEffect(() => {
-    if (currentStore && STORES[currentStore]) {
-      setStoreLogo(STORES[currentStore].logo);
-      setStoreName(STORES[currentStore].name);
-    } else {
-      setStoreLogo(null);
-      setStoreName('');
-    }
-  }, [currentStore]);
+  const activeStore = currentStore ? storeById[currentStore] : null;
+  const storeLogo = activeStore?.logo ?? null;
+  const storeName = activeStore?.name ?? '';
 
+  // Cierra el dropdown al hacer click fuera del contenedor
   useEffect(() => {
     const handler = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setMenuOpen(false);
-      }
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  // La Navbar no se muestra en la pantalla de selección de tienda
   if (!pathname.startsWith('/products') && !pathname.startsWith('/categories')) {
     return null;
   }

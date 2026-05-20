@@ -1,23 +1,7 @@
 import { Link } from 'react-router-dom';
 import { SaleStamp } from './SaleStamp';
 import { BestSellerStamp } from './BestSellerStamp';
-
-const COMPONENT_LABELS = {
-  hhc: 'HHC',
-  d8: 'D8',
-  d10: 'D10',
-  cbd: 'CBD',
-  cbg: 'CBG',
-  cbn: 'CBN',
-  muscimol: 'Muscimol',
-  amanita_muscaria: 'Amanita',
-  lion_mane: "Lion's mane",
-  reishi: 'Reishi',
-  cordyceps: 'Cordyceps',
-  turkey_tail: 'Turkey tail',
-  mad_honey: 'Mad honey',
-  mushroom_blend: 'Mushroom blend',
-};
+import { useCatalogConfig } from '../hooks/useCatalogConfig';
 
 export const Card = ({
   item,
@@ -26,9 +10,12 @@ export const Card = ({
   priority = true,
   emojiMap = {},
 }) => {
+  const { componentLabelMap } = useCatalogConfig();
+  // Soporta múltiples nombres de campo de imagen por compatibilidad con datos históricos
   const imgSrc = item.image || item.img || item.src || '';
   const label = `Ver grande ${item.brand} ${item.model || ''}`.trim();
 
+  // Solo muestra subcategorías con nivel > 0 (0 significa "no aplica")
   const activeSubcats = (item.subcategories ?? []).filter((s) => s.level > 0);
   const activeComponents = Object.entries(item.components ?? {}).filter(
     ([, v]) => v,
@@ -36,6 +23,7 @@ export const Card = ({
 
   const isEdible = item.kind === 'Edibles';
 
+  // Los Edibles no muestran puffs/gramos porque sus detalles relevantes van en dosage_mg
   const details = isEdible
     ? []
     : [
@@ -125,7 +113,7 @@ export const Card = ({
                   key={key}
                   className='px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded dark:bg-blue-900 dark:text-blue-200'
                 >
-                  {COMPONENT_LABELS[key] || key}
+                  {componentLabelMap[key] || key}
                 </span>
               ))}
             </div>

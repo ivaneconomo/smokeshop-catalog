@@ -1,5 +1,11 @@
 // utils/products.js
 
+const FLAVOR_PALETTE = ['red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'purple', 'pink'];
+
+export function getRandomFlavorColor() {
+  return FLAVOR_PALETTE[Math.floor(Math.random() * FLAVOR_PALETTE.length)];
+}
+
 // Paleta mínima para los badges de sabores disponibles
 export const flavorColorMap = {
   red: {
@@ -119,6 +125,7 @@ export function getFlavorStatus(item, activeStore) {
   return list.map((f) => ({
     name: f.name,
     color: f.color,
+    strain: f.strain ?? '',
     isAvailable: isFlavorAvailable(f, activeStore),
   }));
 }

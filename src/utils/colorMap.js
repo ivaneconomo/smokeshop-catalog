@@ -1,3 +1,4 @@
+// Clases Tailwind separadas en light/dark para que el purger las detecte como strings completos
 export const COLOR_MAP = {
   red: {
     light: 'bg-red-100 text-red-600 border-red-600',

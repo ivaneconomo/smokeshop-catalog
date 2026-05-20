@@ -6,6 +6,8 @@ import FlavorBadge from './FlavorBadge';
 import { getFlavorStatus } from '../utils/products';
 import { patchFlavorAvailability } from '../services/api';
 import { toast } from 'react-hot-toast';
+import { useCatalogConfig } from '../hooks/useCatalogConfig';
+import { strainChipClass } from './form/FlavorStrainEditor';
 
 const ProductModal = ({
   openItem,
@@ -14,25 +16,28 @@ const ProductModal = ({
   activeStore = 'all',
   onAvailabilityChange, // notifica al padre para lista + cache
 }) => {
-  // Estado local
+  const { componentLabelMap } = useCatalogConfig();
+
+  // Copia local para aplicar cambios optimistas sin mutar el estado del padre
   const [item, setItem] = useState(openItem);
   const [editMode, setEditMode] = useState(false);
-  const [showComponents, setShowComponents] = useState(false);
 
   // Pendientes por sabor (Set de flavorIds en curso)
   const [pending, setPending] = useState(() => new Set());
 
+  // No se puede editar disponibilidad si la vista es "todas las tiendas"
   const storeEditable = activeStore && activeStore !== 'all';
 
   useEffect(() => setItem(openItem), [openItem]);
 
-  // Lista de sabores pintables
+  // useMemo evita recalcular el status de cada flavor en cada render
   const flavors = useMemo(
     () => getFlavorStatus(item, activeStore),
     [item, activeStore],
   );
 
   // name -> _id (para API por id real)
+  // Se recalcula solo cuando cambia item, no en cada render
   const flavorIdByName = useMemo(() => {
     const map = new Map();
     for (const f of item?.flavors ?? []) map.set(f.name, f._id);
@@ -63,9 +68,9 @@ const ProductModal = ({
     target.available_location[activeStore].available = next;
 
     setItem(draft);
-    setOpenItem(draft);
 
     // ---- Notifica al padre (lista + cache) de inmediato ----
+    // onAvailabilityChange también actualiza openItem en el padre — no lo hacemos aquí
     onAvailabilityChange?.({
       productId: item._id,
       flavorId,
@@ -99,7 +104,6 @@ const ProductModal = ({
 
       // ---- ROLLBACK local ----
       setItem(prev);
-      setOpenItem(prev);
 
       // ---- ROLLBACK en el padre ----
       onAvailabilityChange?.({
@@ -352,6 +356,11 @@ const ProductModal = ({
                         >
                           {statusIcon}
                           <span>{f.name}</span>
+                          {f.strain && (
+                            <span className={`ml-1 rounded px-1.5 py-0.5 text-xs font-medium ${strainChipClass(f.strain)}`}>
+                              {f.strain}
+                            </span>
+                          )}
                         </div>
                       </FlavorBadge>
                     );
@@ -361,49 +370,52 @@ const ProductModal = ({
           )}
           {/* Componentes */}
           {(() => {
-            const COMPONENT_LABELS = {
-              hhc: 'HHC', d8: 'Delta 8', d10: 'Delta 10', cbd: 'CBD',
-              cbg: 'CBG', cbn: 'CBN', mushrooms: 'Mushrooms',
-              mushroom_blend: 'Mushroom Blend', muscimol: 'Muscimol',
-              amanita_muscaria: 'Amanita', lion_mane: "Lion's Mane",
-              reishi: 'Reishi', cordyceps: 'Cordyceps',
-              turkey_tail: 'Turkey Tail', mad_honey: 'Mad Honey',
-            };
             const active = Object.entries(item.components ?? {}).filter(([, v]) => v);
             if (active.length === 0) return null;
             return (
               <section className='mt-4'>
-                <button
-                  type='button'
-                  onClick={() => setShowComponents((v) => !v)}
-                  className='flex items-center gap-1 text-lg text-slate-700 dark:text-slate-200'
-                >
                   <span>Componentes</span>
-                  <svg
-                    className={`w-4 h-4 transition-transform ${showComponents ? 'rotate-180' : ''}`}
-                    xmlns='http://www.w3.org/2000/svg'
-                    fill='none'
-                    viewBox='0 0 24 24'
-                    stroke='currentColor'
-                  >
-                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
-                  </svg>
-                </button>
-                {showComponents && (
                   <div className='mt-2 flex flex-wrap gap-2'>
                     {active.map(([key]) => (
                       <span
                         key={key}
                         className='rounded-md border border-blue-500 px-3 py-1 text-sm text-blue-600 dark:text-blue-300 dark:border-blue-400'
                       >
-                        {COMPONENT_LABELS[key] ?? key}
+                        {componentLabelMap[key] ?? key}
                       </span>
                     ))}
                   </div>
-                )}
               </section>
             );
           })()}
+
+          {/* Strains */}
+          {(item.strains ?? []).length > 0 && (
+            <section className='mt-4 space-y-2'>
+              <p className='text-lg text-slate-700 dark:text-slate-200'>Strains</p>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-1'>
+                {(item.strains ?? [])
+                  .slice()
+                  .sort((a, b) => {
+                    if (activeStore === 'all') return 0;
+                    const aAvail = a.available_location?.[activeStore]?.available ?? true;
+                    const bAvail = b.available_location?.[activeStore]?.available ?? true;
+                    return aAvail === bAvail ? 0 : aAvail ? -1 : 1;
+                  })
+                  .map((s) => {
+                    const isAvailable =
+                      activeStore === 'all'
+                        ? true
+                        : s.available_location?.[activeStore]?.available ?? true;
+                    return (
+                      <FlavorBadge key={s.name} isAvailable={isAvailable} disabled>
+                        <span className='select-none'>{s.name}</span>
+                      </FlavorBadge>
+                    );
+                  })}
+              </div>
+            </section>
+          )}
         </div>
       </div>
     </div>

@@ -1,3 +1,4 @@
+// pointer-events-none evita que el stamp intercepte clicks sobre la imagen
 export const SaleStamp = ({ className }) => {
   return (
     <img

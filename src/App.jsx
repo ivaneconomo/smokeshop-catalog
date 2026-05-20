@@ -1,5 +1,4 @@
 import { Routes, Route } from 'react-router-dom';
-import ProductsCatalog from './pages/ProductsCatalog';
 import CatalogByCategory from './pages/CatalogByCategory';
 import CreateProduct from './pages/CreateProduct';
 import SortProducts from './pages/SortProducts';
@@ -9,6 +8,7 @@ import SelectStore from './pages/SelectStore';
 import { Footer } from './components/Footer';
 
 export default function App() {
+  // max-w-3xl centra el contenido en pantallas anchas; relative permite posicionar Footer/modals
   return (
     <main className='max-w-3xl mx-auto px-4 relative'>
       <Navbar />
@@ -17,7 +17,6 @@ export default function App() {
         <Route path='/products/new' element={<CreateProduct />} />
         <Route path='/products/sort' element={<SortProducts />} />
         <Route path='/products/:id/edit' element={<EditProduct />} />
-        <Route path='/products' element={<ProductsCatalog />} />
         <Route path='/categories' element={<CatalogByCategory />} />
       </Routes>
       <Footer />

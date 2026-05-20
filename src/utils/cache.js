@@ -19,6 +19,16 @@ export const saveCache = (key, data, ttlMs = 12 * 60 * 60 * 1000) => {
   }
 };
 
+export const clearProductsCache = () => {
+  try {
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith('products:'))
+      .forEach((k) => localStorage.removeItem(k));
+  } catch {
+    // modo privado o storage bloqueado → ignorar
+  }
+};
+
 export const readCache = (key) => {
   try {
     const raw = localStorage.getItem(key);

@@ -1,5 +1,6 @@
 import LoadingButton from './LoadingButton';
 
+// Wrapper fino: delega el estado loading al padre (modo controlado de LoadingButton)
 export default function RefreshButton({
   onRefresh,
   isRefreshing,
