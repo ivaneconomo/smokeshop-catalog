@@ -261,7 +261,7 @@ const ProductModal = ({
                 Sabores
               </p>
 
-              <div className='grid grid-cols-1 sm:grid-cols-2 gap-1'>
+              <div className='grid grid-cols-1 lg:grid-cols-2 gap-1'>
                 {flavors
                   .slice()
                   .sort((a, b) =>
@@ -350,14 +350,16 @@ const ProductModal = ({
                         disabled={!clickEnabled}
                       >
                         <div
-                          className={`flex items-center gap-1 select-none ${
+                          className={`flex items-center gap-1 w-full select-none ${
                             isInteractive ? 'cursor-pointer' : ''
                           }`}
                         >
                           {statusIcon}
                           <span>{f.name}</span>
                           {f.strain && (
-                            <span className={`ml-1 rounded px-1.5 py-0.5 text-xs font-medium ${strainChipClass(f.strain)}`}>
+                            <span
+                              className={`ml-auto rounded px-1.5 py-0.5 text-xs font-medium ${strainChipClass(f.strain)}`}
+                            >
                               {f.strain}
                             </span>
                           )}

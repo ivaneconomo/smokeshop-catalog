@@ -14,9 +14,8 @@ export default function FlavorBadge({
   const c = flavorColorMap[color];
 
   const base =
-    // centrado vertical (items-center), alineado a la izquierda (justify-start, text-left)
     'flex items-center justify-start text-left leading-snug ' +
-    'px-2.5 py-1 rounded-sm border md:text-md transition h-full select-none';
+    'px-2.5 py-1 rounded-sm border md:text-md transition h-full select-none w-full';
 
   const on = `${c.bg} ${c.text} ${c.border} ${c.darkBg} ${c.darkText} ${c.darkBorder}`;
   const off =
@@ -24,14 +23,14 @@ export default function FlavorBadge({
     'dark:bg-slate-800 dark:text-slate-400 dark:border-slate-600 opacity-40 line-through';
 
   return (
-    <span
+    <div
       className={`${base} ${isAvailable ? on : off}`}
       title={title}
       aria-disabled={disabled}
       role='status'
       onClick={disabled ? undefined : onClick}
     >
-      <span>{children ?? name}</span>
-    </span>
+      <div className="w-full flex items-center">{children ?? name}</div>
+    </div>
   );
 }
