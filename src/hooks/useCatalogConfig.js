@@ -4,23 +4,44 @@ import { getStores, getProductTypes } from '../services/api';
 const DEFAULT_STORES = [];
 const DEFAULT_PRODUCT_TYPES = [];
 const DEFAULT_STRAINS = ['Sativa', 'Indica', 'Hybrid'];
+const LS_KEY = 'catalog_config';
 
-// Cache a nivel de módulo: se comparte entre todas las instancias del hook
-// en la misma sesión, evitando requests duplicados al montar múltiples componentes.
-let cache = null;
+function readConfigLS() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveConfigLS(config) {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(config));
+  } catch {}
+}
+
+// Cache a nivel de módulo: inicializado desde localStorage para carga instantánea al refrescar
+let cache = readConfigLS();
 
 export function clearConfigCache() {
   cache = null;
+  try {
+    localStorage.removeItem(LS_KEY);
+  } catch {}
 }
 
 export function useCatalogConfig() {
-  // Si ya hay cache, arranca con loading=false para no mostrar spinners innecesarios
   const [config, setConfig] = useState(cache ?? null);
+  // Si ya hay datos (localStorage o sesión previa), no bloquea con spinner
   const [loading, setLoading] = useState(cache === null);
 
   useEffect(() => {
-    // Evita volver a fetchear si otro componente ya llenó el cache
-    if (cache) return;
+    // Si el cache de módulo ya está lleno (misma sesión JS), no repetir el fetch
+    if (cache) {
+      setLoading(false);
+      return;
+    }
 
     Promise.all([getStores(), getProductTypes()])
       .then(([storesData, typesData]) => {
@@ -30,16 +51,18 @@ export function useCatalogConfig() {
           strains: typesData.strains ?? DEFAULT_STRAINS,
         };
         cache = result;
+        saveConfigLS(result);
         setConfig(result);
       })
       .catch(() => {
-        // Si el backend falla, devuelve valores vacíos para no romper la UI
-        const fallback = {
-          stores: DEFAULT_STORES,
-          productTypes: DEFAULT_PRODUCT_TYPES,
-          strains: DEFAULT_STRAINS,
-        };
-        setConfig(fallback);
+        // Si hay datos en localStorage ya cargados, ignorar el error silenciosamente
+        if (cache === null) {
+          setConfig({
+            stores: DEFAULT_STORES,
+            productTypes: DEFAULT_PRODUCT_TYPES,
+            strains: DEFAULT_STRAINS,
+          });
+        }
       })
       .finally(() => setLoading(false));
   }, []);
@@ -48,14 +71,8 @@ export function useCatalogConfig() {
   const productTypes = config?.productTypes ?? DEFAULT_PRODUCT_TYPES;
   const strains = config?.strains ?? DEFAULT_STRAINS;
 
-  // { store_6: { id, name, logo }, ... } — para lookup directo sin .find()
   const storeById = Object.fromEntries(stores.map((s) => [s.id, s]));
-
-  // { Nicotine: { value, label, fields, components }, ... } — para lookup por kind
   const kindByValue = Object.fromEntries(productTypes.map((t) => [t.value, t]));
-
-  // Mapa global key→label uniendo los componentes de todos los kinds.
-  // Permite que Card y ProductModal muestren el label sin conocer el kind del producto.
   const componentLabelMap = Object.fromEntries(
     productTypes.flatMap((t) => t.components.map((c) => [c.key, c.label]))
   );
