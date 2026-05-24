@@ -7,7 +7,7 @@ export const Card = ({
   item,
   onPreview,
   className = '',
-  priority = true,
+  priority = false,
   emojiMap = {},
 }) => {
   const { componentLabelMap } = useCatalogConfig();
@@ -22,6 +22,7 @@ export const Card = ({
   );
 
   const isEdible = item.kind === 'Edibles';
+  const isKit = item.kind === 'Kits';
 
   // Los Edibles no muestran puffs/gramos porque sus detalles relevantes van en dosage_mg
   const details = isEdible
@@ -32,6 +33,19 @@ export const Card = ({
         item.dosage_mg ? `${item.dosage_mg}mg` : null,
         !item.puffs && !item.grams && !item.dosage_mg ? item.kind : null,
       ].filter(Boolean);
+
+  const SubcatBars = ({ items }) =>
+    items.map((s) => (
+      <div key={s.name} className='flex items-center gap-1.5'>
+        <span className='text-sm leading-none'>{emojiMap[s.name] || '•'}</span>
+        <div className='flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden'>
+          <div
+            className='h-full rounded-full bg-linear-to-r from-blue-400 to-purple-500'
+            style={{ width: `${(s.level / 5) * 100}%` }}
+          />
+        </div>
+      </div>
+    ));
 
   return (
     <div
@@ -65,7 +79,7 @@ export const Card = ({
         {item.on_sale && (
           <SaleStamp className='left-0 top-0 max-w-48 sm:max-w-32 md:max-w-36' />
         )}
-        {item.on_featured && (
+        {item.on_featured && !item.on_sale && (
           <BestSellerStamp className='left-0 top-0 max-w-48 sm:max-w-32 md:max-w-36' />
         )}
 
@@ -121,19 +135,7 @@ export const Card = ({
 
           {activeSubcats.length > 0 && (
             <div className='flex flex-col gap-1 mt-auto pt-1'>
-              {activeSubcats.map((s) => (
-                <div key={s.name} className='flex items-center gap-1.5'>
-                  <span className='text-sm leading-none'>
-                    {emojiMap[s.name] || '•'}
-                  </span>
-                  <div className='flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden'>
-                    <div
-                      className='h-full rounded-full bg-linear-to-r from-blue-400 to-purple-500'
-                      style={{ width: `${(s.level / 5) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+              <SubcatBars items={activeSubcats} />
             </div>
           )}
         </div>
@@ -142,28 +144,39 @@ export const Card = ({
           <h2 className='text-lg font-semibold text-slate-900 dark:text-white leading-snug'>
             <span className='truncate block'>
               {item.brand}
-              {' - '}
+              {' • '}
               <span className='font-light text-slate-800 dark:text-slate-300'>
                 {item.model}
               </span>
+              {isKit && details.length > 0 && (
+                <span className='dark:text-slate-100/70 font-extralight'>
+                  {' • '}
+                  {details.join(' - ')}
+                </span>
+              )}
             </span>
           </h2>
-          {details.length > 0 && (
+          {!isKit && details.length > 0 && (
             <h3 className='dark:text-slate-100/70'>{details.join(' - ')}</h3>
           )}
-          {activeSubcats.map((s) => (
-            <div key={s.name} className='flex items-center gap-2'>
-              <span className='text-base leading-none'>
-                {emojiMap[s.name] || '•'}
-              </span>
-              <div className='flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden'>
-                <div
-                  className='h-full rounded-full bg-linear-to-r from-blue-400 to-purple-500'
-                  style={{ width: `${(s.level / 5) * 100}%` }}
-                />
-              </div>
+          {isKit && activeComponents.length > 0 && (
+            <div className='flex flex-wrap gap-1'>
+              {activeComponents.map(([key]) => (
+                <span
+                  key={key}
+                  className='px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded dark:bg-blue-900 dark:text-blue-200'
+                >
+                  {componentLabelMap[key] || key}
+                </span>
+              ))}
             </div>
-          ))}
+          )}
+
+          {activeSubcats.length > 0 && (
+            <div className='flex flex-col gap-1 mt-2'>
+              <SubcatBars items={activeSubcats} />
+            </div>
+          )}
         </div>
       )}
     </div>
