@@ -3,6 +3,7 @@ import { getEffects } from '../services/api';
 import { inputClass, labelClass } from '../utils/formStyles';
 import { getRandomFlavorColor } from '../utils/products';
 import ChecklistSelector from './form/ChecklistSelector';
+import CloudinaryUpload from './form/CloudinaryUpload';
 import FlavorStrainEditor from './form/FlavorStrainEditor';
 import Toggle from './form/Toggle';
 import SubcategorySelector from './form/SubcategorySelector';
@@ -84,23 +85,30 @@ export default function ProductForm({
     }
   }, [productTypes, kind]);
 
-  // Syncs component checkboxes when kind changes. Skips the very first render so that
-  // edit mode can keep initialValues.components without them being wiped out.
+  // Syncs component checkboxes when kind or productTypes changes.
+  // Uses two refs to distinguish "first load" from "user changed kind".
   const componentsSyncedRef = useRef(false);
+  const prevKindRef = useRef(kind);
   useEffect(() => {
     const kindDef = productTypes.find((t) => t.value === kind);
     if (!kindDef) return;
 
+    const kindChanged = prevKindRef.current !== kind;
+    prevKindRef.current = kind;
+
     if (!componentsSyncedRef.current) {
+      // First valid run: populate from initialValues
       componentsSyncedRef.current = true;
       setLocalComponents(kindDef.components);
       setSelectedComponents(initialValues.selectedComponents ?? []);
       return;
     }
 
-    // Subsequent kind change (user interaction): reset
-    setLocalComponents(kindDef.components);
-    setSelectedComponents([]);
+    // Only reset when the user explicitly changed the kind, not when productTypes refreshes
+    if (kindChanged) {
+      setLocalComponents(kindDef.components);
+      setSelectedComponents([]);
+    }
   // initialValues.selectedComponents intentionally omitted — it's only used on first sync
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kind, productTypes]);
@@ -276,12 +284,7 @@ export default function ProductForm({
 
         <label className={labelClass}>
           Imagen
-          <input
-            className={inputClass}
-            value={image}
-            onChange={(e) => setImage(e.target.value)}
-            placeholder='URL opcional'
-          />
+          <CloudinaryUpload value={image} onChange={setImage} />
         </label>
 
         <label className={labelClass}>

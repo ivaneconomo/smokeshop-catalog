@@ -3,6 +3,7 @@ import CatalogByCategory from './pages/CatalogByCategory';
 import CreateProduct from './pages/CreateProduct';
 import SortProducts from './pages/SortProducts';
 import EditProduct from './pages/EditProduct';
+import ArchivedProducts from './pages/ArchivedProducts';
 import Navbar from './components/Navbar';
 import SelectStore from './pages/SelectStore';
 import { Footer } from './components/Footer';
@@ -16,6 +17,7 @@ export default function App() {
         <Route path='/' element={<SelectStore />} />
         <Route path='/products/new' element={<CreateProduct />} />
         <Route path='/products/sort' element={<SortProducts />} />
+        <Route path='/products/archived' element={<ArchivedProducts />} />
         <Route path='/products/:id/edit' element={<EditProduct />} />
         <Route path='/categories' element={<CatalogByCategory />} />
       </Routes>

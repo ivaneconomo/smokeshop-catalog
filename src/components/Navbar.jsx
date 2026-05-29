@@ -43,11 +43,13 @@ export default function Navbar() {
   const adminLinks = [
     { name: 'Crear producto', to: '/products/new' },
     { name: 'Ordenar / Visibilidad', to: '/products/sort' },
+    { name: 'Archivados', to: '/products/archived' },
   ];
 
   const isAdminActive =
     pathname === '/products/new' ||
     pathname === '/products/sort' ||
+    pathname === '/products/archived' ||
     pathname.endsWith('/edit');
 
   return (

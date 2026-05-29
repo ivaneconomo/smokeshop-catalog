@@ -12,7 +12,11 @@ export const Card = ({
 }) => {
   const { componentLabelMap } = useCatalogConfig();
   // Soporta múltiples nombres de campo de imagen por compatibilidad con datos históricos
-  const imgSrc = item.image || item.img || item.src || '';
+  const imgSrc =
+    item.image ||
+    item.img ||
+    item.src ||
+    'https://res.cloudinary.com/dxgcm42sb/image/upload/fl_preserve_transparency/v1759513293/samples/logo.jpg?_s=public-apps';
   const label = `Ver grande ${item.brand} ${item.model || ''}`.trim();
 
   // Solo muestra subcategorías con nivel > 0 (0 significa "no aplica")
@@ -82,23 +86,6 @@ export const Card = ({
         {item.on_featured && !item.on_sale && (
           <BestSellerStamp className='left-0 top-0 max-w-48 sm:max-w-32 md:max-w-36' />
         )}
-
-        <Link
-          to={`/products/${item._id}/edit`}
-          onClick={(e) => e.stopPropagation()}
-          aria-label='Editar producto'
-          className='absolute right-2 top-2 rounded-full bg-white/80 p-1.5 text-slate-500 opacity-0 shadow transition hover:bg-white hover:text-blue-600 group-hover:opacity-100 dark:bg-slate-800/80 dark:hover:bg-slate-800 dark:text-slate-400 dark:hover:text-blue-400'
-        >
-          <svg
-            xmlns='http://www.w3.org/2000/svg'
-            width='14'
-            height='14'
-            fill='currentColor'
-            viewBox='0 0 256 256'
-          >
-            <path d='M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.68,147.31,64l24-24L216,84.68Z' />
-          </svg>
-        </Link>
       </div>
 
       {/* Content */}

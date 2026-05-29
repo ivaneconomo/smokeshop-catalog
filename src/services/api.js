@@ -60,6 +60,12 @@ export const getProductById = (id) =>
 export const updateProduct = (id, data) =>
   api.patch(`/products/${id}`, data).then((r) => r.data);
 
+export const archiveProduct = (id) =>
+  api.patch(`/products/${id}/archive`).then((r) => r.data);
+
+export const deleteProduct = (id) =>
+  api.delete(`/products/${id}`).then((r) => r.data);
+
 // Cambia la disponibilidad de un sabor para una tienda específica
 export const patchFlavorAvailability = ({ productId, flavorId, storeId, available }) =>
   api
